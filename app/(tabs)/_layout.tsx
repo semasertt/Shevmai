@@ -4,6 +4,7 @@ import { getTabScreenOptions } from "@/src/utils/tabOptions";
 import {Ionicons} from "@expo/vector-icons";
 
 export default function TabsLayout() {
+    // @ts-ignore
     return (
         <Tabs
             screenOptions={{
