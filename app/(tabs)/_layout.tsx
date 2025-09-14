@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 // @ts-ignore
-import { getTabScreenOptions } from "../../src/utils/tabOptions";
+import { getTabScreenOptions } from "@/src/utils/tabOptions";
 import {Ionicons} from "@expo/vector-icons";
 
 export default function TabsLayout() {
