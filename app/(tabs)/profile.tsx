@@ -4,7 +4,7 @@ export default function Profile() {
     return (
         <View style={s.container}>
             <Text style={s.title}>Profil</Text>
-            <Text style={s.info}>aq (Şimdilik sadece başlık.)</Text>
+            <Text style={s.info}>Burası sdfdsfdsfdsfprofil sayfası. (Şimdilik sadece başlık.)</Text>
         </View>
     );
 }
