@@ -9,7 +9,7 @@ export default function OnboardingIndex() {
             <Text style={s.title}>Başlangıç</Text>
             <Text style={s.desc}>Devam etmek için bir seçenek seç:</Text>
 
-            <TouchableOpacity style={s.btnPrimary} onPress={() => router.push('/onboarding/select-child')}>
+            <TouchableOpacity style={s.btnPrimary} onPress={() => router.push('/choose-child')}>
                 <Text style={s.btnPrimaryText}>👶 Çocuk Seç</Text>
             </TouchableOpacity>
 
