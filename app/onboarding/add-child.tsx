@@ -1,4 +1,5 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet} from 'react-native';
+import {SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useAppStore } from '../../lib/store';
@@ -17,7 +18,7 @@ export default function AddChild() {
     };
 
     return (
-        <View style={s.container}>
+        <SafeAreaView style={s.container}>
             <Text style={s.title}>Çocuk Ekle</Text>
 
             <TextInput
@@ -31,7 +32,7 @@ export default function AddChild() {
             <TouchableOpacity style={s.btnPrimary} onPress={save}>
                 <Text style={s.btnPrimaryText}>Kaydet ve Anasayfa</Text>
             </TouchableOpacity>
-        </View>
+        </SafeAreaView>
     );
 }
 
