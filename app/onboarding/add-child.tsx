@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { addChild } from '../../services/children';
+import { addChild } from '@/services/children';
 import { router } from 'expo-router';
 
 export default function AddChild() {

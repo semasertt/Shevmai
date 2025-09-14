@@ -9,9 +9,13 @@ export const getTabScreenOptions = (label: string, icon: JSX.Element) => ({
         // gelen icon'u renklendir ve boyutunu ayarla
         React.cloneElement(icon, { color, size }),
     tabBarLabelStyle: {
-        textAlign: "center" as const,
         fontSize: 12,
         marginTop: 5,
+        textAlign: "center",
+    },
+    tabBarItemStyle: {
+        alignItems: "center",
+        justifyContent: "center",
     },
     tabBarIconStyle: {
         marginBottom: -2,
