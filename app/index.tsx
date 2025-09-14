@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
-import { fetchChildren, getSelectedChild } from '../services/children';
+import { fetchChildren, getSelectedChild } from '@/services/children';
 
 export default function Index() {
     const [loading, setLoading] = useState(true);

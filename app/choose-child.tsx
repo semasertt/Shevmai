@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { fetchChildren, setSelectedChild, deleteChild } from '../services/children';
+import { fetchChildren, setSelectedChild, deleteChild } from '@/services/children';
 import type { Child } from '../types';
 import { router } from 'expo-router';
 
