@@ -1,5 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
+import {SafeAreaView } from 'react-native-safe-area-context'
+
 import { useAppStore } from '../../lib/store';
 
 export default function SelectChild() {
@@ -23,7 +25,7 @@ export default function SelectChild() {
     const isEmpty = children.length === 0;
 
     return (
-        <View style={s.container}>
+        <SafeAreaView style={s.container}>
             <Text style={s.title}>Çocuk Seç</Text>
 
             {isEmpty ? (
@@ -52,7 +54,7 @@ export default function SelectChild() {
                     </TouchableOpacity>
                 </>
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
