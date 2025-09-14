@@ -31,6 +31,7 @@ export default function SelectChild() {
             {isEmpty ? (
                 <View style={{ gap: 12 }}>
                     <Text style={s.desc}>Kayıtlı çocuk yok.</Text>
+                    <Text style={s.desc}>Semaşevval</Text>
 
                     <TouchableOpacity style={s.btnOutline} onPress={goAddChild}>
                         <Text style={s.btnOutlineText}>➕ Çocuk Ekle</Text>
