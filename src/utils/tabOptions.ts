@@ -11,11 +11,11 @@ export const getTabScreenOptions = (label: string, icon: JSX.Element) => ({
     tabBarLabelStyle: {
         fontSize: 12,
         marginTop: 5,
-        textAlign: "center",
+        textAlign: "center" as const,
     },
     tabBarItemStyle: {
-        alignItems: "center",
-        justifyContent: "center",
+        alignItems: "center" as const,
+        justifyContent: "center" as const,
     },
     tabBarIconStyle: {
         marginBottom: -2,
