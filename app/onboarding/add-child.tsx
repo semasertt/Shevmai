@@ -1,53 +1,57 @@
-import {View, Text, TextInput, TouchableOpacity, StyleSheet} from 'react-native';
-import {SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react';
-import { useRouter } from 'expo-router';
-import { useAppStore } from '../../lib/store';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { addChild } from '../../services/children';
+import { router } from 'expo-router';
 
 export default function AddChild() {
     const [name, setName] = useState('');
-    const router = useRouter();
-    const addChild = useAppStore((s) => s.addChild);
-    const setOnboarded = useAppStore((s) => s.setOnboarded);
+    const [birthdate, setBirthdate] = useState(''); // YYYY-MM-DD
+    const [gender, setGender] = useState('');
 
-    const save = () => {
-        if (!name.trim()) return;
-        addChild(name);
-        setOnboarded(true);
-        router.replace('/(tabs)/home');
+    const onSave = async () => {
+        try {
+            await addChild({ name: name.trim(), birthdate: birthdate.trim() || undefined, gender: gender.trim() || undefined });
+            Alert.alert('Başarılı', 'Çocuk eklendi.');
+            router.replace('/choose-child');
+        } catch (e:any) {
+            Alert.alert('Hata', e.message ?? 'Kaydedilemedi.');
+        }
     };
 
     return (
-        <SafeAreaView style={s.container}>
-            <Text style={s.title}>Çocuk Ekle</Text>
+        <View style={{ flex:1, padding:16, gap:12 }}>
+            <Text style={{ fontSize:20, fontWeight:'700' }}>Çocuk Ekle</Text>
 
+            <Text>İsim *</Text>
             <TextInput
+                placeholder="Örn: Elif"
                 value={name}
                 onChangeText={setName}
-                placeholder="İsim"
-                placeholderTextColor="#94a3b8"
-                style={s.input}
+                style={{ borderWidth:1, borderColor:'#e5e7eb', borderRadius:10, padding:12 }}
             />
 
-            <TouchableOpacity style={s.btnPrimary} onPress={save}>
-                <Text style={s.btnPrimaryText}>Kaydet ve Anasayfa</Text>
+            <Text>Doğum Tarihi (YYYY-MM-DD)</Text>
+            <TextInput
+                placeholder="2021-05-17"
+                value={birthdate}
+                onChangeText={setBirthdate}
+                style={{ borderWidth:1, borderColor:'#e5e7eb', borderRadius:10, padding:12 }}
+            />
+
+            <Text>Cinsiyet</Text>
+            <TextInput
+                placeholder="Kız/Erkek"
+                value={gender}
+                onChangeText={setGender}
+                style={{ borderWidth:1, borderColor:'#e5e7eb', borderRadius:10, padding:12 }}
+            />
+
+            <TouchableOpacity
+                onPress={onSave}
+                style={{ backgroundColor:'#111827', padding:14, borderRadius:12, marginTop:8 }}
+            >
+                <Text style={{ color:'#fff', textAlign:'center', fontWeight:'700' }}>Kaydet</Text>
             </TouchableOpacity>
-        </SafeAreaView>
+        </View>
     );
 }
-
-const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0b1020', padding: 24, gap: 16 },
-    title: { color: '#fff', fontSize: 24, fontWeight: '800' },
-    input: {
-        backgroundColor: '#111827',
-        color: '#e5e7eb',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        borderWidth: 1,
-        borderColor: '#1f2937',
-    },
-    btnPrimary: { backgroundColor: '#22c55e', paddingVertical: 14, borderRadius: 14, alignItems: 'center' },
-    btnPrimaryText: { color: '#0b1020', fontWeight: '800', fontSize: 16 },
-});
