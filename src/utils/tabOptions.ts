@@ -11,7 +11,7 @@ export const getTabScreenOptions = (label: string, icon: JSX.Element) => ({
     tabBarLabelStyle: {
         textAlign: "center" as const,
         fontSize: 12,
-        marginTop: 0,
+        marginTop: 5,
     },
     tabBarIconStyle: {
         marginBottom: -2,
