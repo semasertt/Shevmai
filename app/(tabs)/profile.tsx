@@ -1,16 +1,18 @@
-import { View, Text, StyleSheet } from 'react-native';
+// örn. Profile/Settings ekranında
+import { supabase } from "@/lib/supabase";
+import { router } from "expo-router";
+import { Button, Text, View } from "react-native";
 
-export default function Profile() {
+export default function Settings() {
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.replace("/(auth)/sign-in"); // giriş ekranına götür
+    };
+
     return (
-        <View style={s.container}>
-            <Text style={s.title}>Profil</Text>
-            <Text style={s.info}>Burası profil sayfası. (Şimdilik sadece başlık.)</Text>
+        <View>
+            <Text>Hesap</Text>
+            <Button title="Çıkış yap" onPress={handleSignOut} />
         </View>
     );
 }
-
-const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0b1020', padding: 20, gap: 10 },
-    title: { color: '#fff', fontSize: 22, fontWeight: '800' },
-    info: { color: '#cbd5e1' },
-});
