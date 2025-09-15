@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { fetchChildren, getSelectedChild } from '../../services/children';
-import type { Child } from '../../types';
+import { fetchChildren, getSelectedChild } from '@/services/children';
+import type { Child } from '@/types';
 import { router } from 'expo-router';
 
 export default function Home() {

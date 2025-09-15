@@ -16,8 +16,6 @@ export default function Index() {
                 }
                 const selected = await getSelectedChild();
                 if (selected && children.find(c => c.id === selected)) {
-                    router.replace('/(tabs)/home');
-                } else {
                     router.replace('/choose-child');
                 }
             } catch {
