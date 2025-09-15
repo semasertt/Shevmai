@@ -20,10 +20,4 @@ export default function Index() {
     if (!ready) return null;
     return <Redirect href={loggedIn ? "/onboarding" : "/(auth)/sign-in"} />;
 
-// app/index.tsx
-import { Redirect } from 'expo-router';
-
-export default function Index() {
-    return <Redirect href="/onboarding" />;
-
 }
