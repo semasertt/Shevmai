@@ -1,10 +1,8 @@
+// app/(tabs)/_layout.tsx
 import { Tabs } from "expo-router";
-// @ts-ignore
-import { getTabScreenOptions } from "@/src/utils/tabOptions";
-import {Ionicons} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function TabsLayout() {
-    // @ts-ignore
     return (
         <Tabs
             screenOptions={{
@@ -17,19 +15,28 @@ export default function TabsLayout() {
         >
             <Tabs.Screen
                 name="home"
-                options={getTabScreenOptions("Anasayfa", <Ionicons name="home-outline" />)}
+                options={{
+                    title: "Anasayfa",
+                    tabBarLabel: "Anasayfa",
+                    tabBarIcon: () => <Ionicons name="home-outline" />,
+                }}
             />
-
             <Tabs.Screen
                 name="chatbot"
-                options={getTabScreenOptions("Chatbot", <Ionicons name="chatbubble-ellipses-outline" />)}
+                options={{
+                    title: "Chatbot",
+                    tabBarLabel: "Chatbot",
+                    tabBarIcon: () => <Ionicons name="chatbubble-ellipses-outline" />,
+                }}
             />
-
             <Tabs.Screen
                 name="profile"
-                options={getTabScreenOptions("Profil", <Ionicons name="person-outline" />)}
+                options={{
+                    title: "Profil",
+                    tabBarLabel: "Profil",
+                    tabBarIcon: () => <Ionicons name="person-outline" />,
+                }}
             />
-
         </Tabs>
     );
 }
