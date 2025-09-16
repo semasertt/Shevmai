@@ -1,3 +1,7 @@
+
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {router} from "expo-router";
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, Pressable, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +17,22 @@ export default function ProfileScreen() {
     const [settingsOpen, setSettingsOpen] = useState(false);
     const navigation = useNavigation();
 
+
     return (
+
+        <View style={s.container}>
+            <Text style={s.title}>Profil</Text>
+            <Text style={s.info}>Burası profil sayfası. (Şimdilik sadece başlık.)</Text>
+        </View>
+
+    );
+}
+
+const s = StyleSheet.create({
+    container: { flex: 1, padding: 20, gap: 10 },
+    title: {  fontSize: 22, fontWeight: '800' },
+    info: {  },
+
         <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             {/* üst kısım: resim + bilgiler */}
             <View style={styles.topRow}>
@@ -103,4 +122,5 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 6,
     },
+
 });

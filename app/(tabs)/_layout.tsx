@@ -18,7 +18,9 @@ export default function TabsLayout() {
                 options={{
                     title: "Anasayfa",
                     tabBarLabel: "Anasayfa",
-                    tabBarIcon: () => <Ionicons name="home-outline" />,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="home-outline" size={size} color={color} />
+                    ),
                 }}
             />
             <Tabs.Screen
@@ -26,7 +28,9 @@ export default function TabsLayout() {
                 options={{
                     title: "Chatbot",
                     tabBarLabel: "Chatbot",
-                    tabBarIcon: () => <Ionicons name="chatbubble-ellipses-outline" />,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
+                    ),
                 }}
             />
             <Tabs.Screen
@@ -34,7 +38,9 @@ export default function TabsLayout() {
                 options={{
                     title: "Profil",
                     tabBarLabel: "Profil",
-                    tabBarIcon: () => <Ionicons name="person-outline" />,
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="person-outline" size={size} color={color} />
+                    ),
                 }}
             />
         </Tabs>

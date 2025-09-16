@@ -1,10 +1,11 @@
 // src/api/gemini.ts
 
+// src/api/gemini.ts
 export async function analyzeImage(
     base64: string,
-    prompt: string = "Bu görseli analiz et: İçindeki yazıları oku ve açıkla, ayrıca görselde ne gördüğünü de anlat."
+    prompt: string // <-- burada ekledik
 ) {
-    const API_KEY = 'AIzaSyAhEfCRjhxxlFg9TWCsPHzPf1uCao3iXho';
+    const API_KEY = "AIzaSyAhEfCRjhxxlFg9TWCsPHzPf1uCao3iXho";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     try {
@@ -15,10 +16,10 @@ export async function analyzeImage(
                 contents: [
                     {
                         parts: [
-                            { text: prompt },
+                            { text: prompt }, // artık parametreden geliyor
                             {
                                 inline_data: {
-                                    mime_type: "image/jpeg", // PNG ise "image/png"
+                                    mime_type: "image/jpeg",
                                     data: base64,
                                 },
                             },
