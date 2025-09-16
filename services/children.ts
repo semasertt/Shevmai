@@ -1,7 +1,7 @@
 // services/children.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../lib/supabase';
-import type { Child } from '../types';
+import { supabase } from "@/lib/supabase";
+import type { Child } from '@/types';
 
 const SELECTED_CHILD_KEY = 'selected_child_id';
 
