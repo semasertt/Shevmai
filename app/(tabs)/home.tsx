@@ -3,74 +3,88 @@ import {
     View,
     Text,
     StyleSheet,
-    TouchableOpacity,
-    FlatList,
     ScrollView,
+    FlatList,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { router } from "expo-router";
+import { supabase } from "@/lib/supabase";
+import { getSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
 
-const CATEGORIES = ["belirti", "ilaç", "aşı", "ölçüm", "tetkik", "doktorNotu"];
+const DEFAULT_CATEGORIES = [
+    { id: "c1", title: "Hastalıklar" },
+    { id: "c2", title: "Boy-Kilo Analizleri" },
+    { id: "c3", title: "Doktor Notları" },
+    { id: "c4", title: "İlaçlar" },
+    { id: "c5", title: "Tahlil Sonuçları" },
+    // { id: "c6", title: "Doktor Notu" },
+];
 
 export default function HomeScreen() {
-    const [child, setChild] = useState({ name: "Ela" }); // geçici mock
+    const [records, setRecords] = useState<any[]>([]);
 
-    const cards = [
-        {
-            id: "1",
-            title: "Hastalıklar",
-            subtitle: "Geçmiş: Grip",
-            details: "Grip → 3 gün sürdü, ilaçla geçti.",
-        },
-        {
-            id: "2",
-            title: "Kan Değerleri",
-            subtitle: "Son test: Normal",
-            details: "Hemoglobin: 12.1 g/dL\nVitamin D: 28 ng/mL",
-        },
-        {
-            id: "3",
-            title: "Aşılar",
-            subtitle: "Takip güncel",
-            details: "Son aşı: 20 Ağustos 2025, KPA-2",
-        },
-        {
-            id: "4",
-            title: "Kilo",
-            subtitle: "Son ölçüm: 18kg",
-            details: "Boy: 105cm, Percentile ~60",
-        },
-    ];
+    useEffect(() => {
+        (async () => {
+            const childId = await getSelectedChild();
+            if (!childId) return;
+
+            const { data, error } = await supabase
+                .from("health_events")
+                .select("*")
+                .eq("child_id", childId)
+                .order("created_at", { ascending: false });
+
+            if (!error && data) setRecords(data);
+        })();
+    }, []);
+
+    // 🔹 son kayıtları kategoriye göre bul
+    const getLatestForCategory = (cat: string) => {
+        const found = records.find(
+            (r) => r.category.toLowerCase() === cat.toLowerCase()
+        );
+        return found
+            ? { subtitle: found.title, details: found.advice || found.details || "" }
+            : { subtitle: "Henüz kayıt yok", details: "" };
+    };
+
+
+    // 🔹 takvimde işaretlenecek günler
+    const markedDates = records.reduce((acc, r) => {
+        const date = r.created_at.slice(0, 10); // YYYY-MM-DD
+        acc[date] = { marked: true, dotColor: "#3b82f6" };
+        return acc;
+    }, {} as any);
 
     return (
         <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
-            <Text style={styles.sectionTitle}>Anasayfa</Text>
-
-            {/* üstte kartlar */}
+            {/* 📌 Üstte scrollable kategori kartları */}
+            <Text style={styles.sectionTitle}>Kategoriler</Text>
             <FlatList
-                data={cards}
+                data={DEFAULT_CATEGORIES}
                 horizontal
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <CardButton
-                        title={item.title}
-                        subtitle={item.subtitle}
-                        details={item.details}
-                    />
-                )}
+                renderItem={({ item }) => {
+                    const latest = getLatestForCategory(item.title);
+                    return (
+                        <CardButton
+                            title={item.title}
+                            subtitle={latest.subtitle}
+                            details={latest.details}
+
+                        />
+                    );
+                }}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             />
 
-            {/* takvim */}
+            {/* 📌 Takvim */}
             <Text style={styles.sectionTitle}>Takvim</Text>
             <View style={styles.calendarWrap}>
                 <Calendar
-                    current={"2025-09-15"}
-                    markedDates={{
-                        "2025-09-15": { selected: true, selectedColor: "#3b82f6" },
-                    }}
+                    current={new Date().toISOString().slice(0, 10)}
+                    markedDates={markedDates}
                     theme={{
                         backgroundColor: "#fff",
                         calendarBackground: "#fff",
@@ -83,45 +97,11 @@ export default function HomeScreen() {
                 />
             </View>
 
-            {/* çocuk selamlama */}
-            <View style={{ flex: 1, padding: 16 }}>
-                <Text style={{ fontSize: 18, fontWeight: "700" }}>
-                    Merhaba, {child.name} 👋
-                </Text>
-                <Text style={{ color: "#6b7280", marginTop: 6 }}>
-                    Bu ekran seçili çocuk ile çalışır. İstersen değiştir:
-                </Text>
-
-                {/* 📌 Kategori Butonları */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={{ marginTop: 16 }}
-                >
-                    {CATEGORIES.map((cat) => (
-                        <TouchableOpacity
-                            key={cat}
-                            onPress={() =>
-                                router.push({
-                                    pathname: "/categories/category",
-                                    params: { category: cat },
-                                })
-                            }
-                            style={styles.categoryBtn}
-                        >
-                            <Text style={{ color: "#fff", fontWeight: "600" }}>
-                                {cat.toUpperCase()}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </ScrollView>
-            </View>
-
-            {/* sağlık özeti */}
+            {/* 📌 Sağlık Özeti Kartı */}
             <Text style={styles.sectionTitle}>Sağlık Özeti</Text>
             <View style={{ paddingHorizontal: 16 }}>
                 <CardButton
-                    title="Genel Durum"
+                    title="Genel Sağlık Durumu"
                     subtitle="Son kontrol: Normal"
                     details={`Çocuğun genel sağlık durumu iyi 👍
 Kilo ve boy gelişimi percentile aralığında.
@@ -148,16 +128,5 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         padding: 8,
         elevation: 3,
-    },
-    categoryBtn: {
-        width: 150,
-        height: 70,
-        backgroundColor: "#2563eb",
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 9999,
-        marginRight: 12,
-        alignItems: "center",
-        justifyContent: "center",
     },
 });
