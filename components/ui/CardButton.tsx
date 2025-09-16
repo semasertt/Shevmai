@@ -43,7 +43,7 @@ export default function CardButton({ title, subtitle, details, variant = 'defaul
                             <Ionicons name="close" size={24} color="#000" />
                         </TouchableOpacity>
                         <Text style={styles.modalTitle}>{title} Detay</Text>
-                        <Text style={styles.modalText}>{details}</Text>
+                        <Text style={styles.modalText}>{details}</Text> {/*} card buton advice yazıyor */}
                     </View>
                 </View>
             </Modal>
@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '80%',
-        height: '80%',
+        width: '100%',
+        height: '100%',
         backgroundColor: '#fff',
         borderRadius: 16,
         padding: 20,

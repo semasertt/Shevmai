@@ -30,12 +30,12 @@ Kullanıcı metin ya da fotoğraf gönderir.
 Çıktıyı her zaman şu JSON formatında ver:
 
 {
-  "category": "ölçüm | aşı | ilaç | belirti | tetkik | doktorNotu",
+  "category": "Hastalıklar | Boy-Kilo Analizleri | Doktor Notları | İlaçlar | Tahlil Sonuçları",
   "title": "Kısa başlık",
   "advice": "Tavsiye"
-
 }
 `;
+
 
 export default function Chatbot() {
     const [prompt, setPrompt] = useState("");
