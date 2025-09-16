@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const GEMINI_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY!;
+const GEMINI_KEY = "AIzaSyAhEfCRjhxxlFg9TWCsPHzPf1uCao3iXho";
 
 import { analyzeImage } from "@/src/api/gemini";
 import {
@@ -23,19 +23,28 @@ import {
 // @ts-ignore
 import { saveHealthEvent } from "@/src/api/saveHealthEvent";
 
-// Ortak prompt
+// 🔹 Ortak prompt
 const BASE_PROMPT = `
 Sen Copi – Ebeveyn Sağlık Co-Pilotu'sun.
 Kullanıcı metin ya da fotoğraf gönderir.
 Çıktıyı her zaman şu JSON formatında ver:
 
 {
-  "category": "Hastalıklar | Boy-Kilo Analizleri | Doktor Notları| İlaçlar | Tahlil Sonuçları",
+  "category": "ölçüm | aşı | ilaç | belirti | tetkik | doktorNotu",
   "title": "Kısa başlık",
   "advice": "Tavsiye"
-
 }
 `;
+
+// 🔹 Home.tsx ile uyumlu kategori eşleme
+const CATEGORY_MAP: { [key: string]: string } = {
+    "ölçüm": "Boy-Kilo Analizleri",
+    "aşı": "Aşılar", // Home’da yoksa ekleyebilirsin
+    "ilaç": "İlaçlar",
+    "belirti": "Hastalıklar",
+    "tetkik": "Tahlil Sonuçları",
+    "doktorNotu": "Doktor Notları",
+};
 
 export default function Chatbot() {
     const [prompt, setPrompt] = useState("");
@@ -44,7 +53,6 @@ export default function Chatbot() {
     const [loading, setLoading] = useState(false);
     const flatListRef = useRef<FlatList>(null);
     const [eventsByCategory, setEventsByCategory] = useState<{ [key: string]: any[] }>({});
-
 
     useEffect(() => {
         requestImagePermissions().catch((err) => console.warn(err.message));
@@ -55,8 +63,8 @@ export default function Chatbot() {
             flatListRef.current?.scrollToEnd({ animated: true });
         }
     }, [messages]);
+
     function extractJsonString(text: string): string | null {
-        // Regex ile JSON blok yakala
         const match = text.match(/\{[\s\S]*\}/);
         return match ? match[0] : null;
     }
@@ -69,7 +77,6 @@ export default function Chatbot() {
 
             if (!jsonStr) {
                 console.warn("⚠️ AI cevabında JSON bulunamadı:", aiResult);
-                // JSON yoksa olduğu gibi metni göster
                 setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
                 return;
             }
@@ -77,44 +84,48 @@ export default function Chatbot() {
             const parsed = JSON.parse(jsonStr);
             console.log("✅ JSON parse başarılı:", parsed);
 
-            // Kaydet (Supabase’e JSON’u gönderiyoruz)
-            await saveHealthEvent(parsed);
+            // ✅ Kategoriyi Home ile uyumlu hale getir
+            const mappedCategory = CATEGORY_MAP[parsed.category] || "Diğer";
 
-            // Local state güncelle
+            const finalEvent = {
+                ...parsed,
+                category: mappedCategory,
+            };
+
+            // 🔹 Supabase’e kaydet
+            await saveHealthEvent(finalEvent);
+
+            // 🔹 Local state güncelle
             setEventsByCategory((prev) => {
-                const cat = parsed.category || "diğer";
+                const cat = finalEvent.category;
                 const current = prev[cat] || [];
                 return {
                     ...prev,
-                    [cat]: [...current, parsed],
+                    [cat]: [...current, finalEvent],
                 };
             });
 
-            setRecords((prev) => [...prev, parsed]);
+            setRecords((prev) => [...prev, finalEvent]);
 
             // ✅ Kullanıcıya sadece advice göster
-            if (parsed.title) {
+            if (finalEvent.advice) {
                 setMessages((prev) => [
                     ...prev,
-                    { role: "bot", type: "text", text: parsed.advice },
+                    { role: "bot", type: "text", text: finalEvent.advice },
                 ]);
             } else {
-                // advice yoksa sadece title gösterelim
                 setMessages((prev) => [
                     ...prev,
-                    { role: "bot", type: "text", text: parsed.title ?? "Bir kayıt alındı." },
+                    { role: "bot", type: "text", text: finalEvent.title ?? "Bir kayıt alındı." },
                 ]);
             }
-
         } catch (err) {
             console.error("❌ JSON parse veya kayıt hatası:", err);
             setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
         }
     }
 
-
-
-    // Text
+    // Text input → Gemini
     const askGemini = async () => {
         if (!prompt.trim()) return;
         const newMessage = { role: "user", type: "text", text: prompt };
@@ -124,7 +135,6 @@ export default function Chatbot() {
 
         try {
             const result = await fetch(
-
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
                 {
                     method: "POST",
@@ -158,7 +168,6 @@ export default function Chatbot() {
     };
 
     // Galeri
-
     const handleGallery = async () => {
         const img = await pickImageFromGallery();
         if (img) {
@@ -170,11 +179,8 @@ export default function Chatbot() {
             if (jsonStr) {
                 try {
                     const parsed = JSON.parse(jsonStr);
-                    // 🔹 resmi de kaydet
-                    await saveHealthEvent({
-                        ...parsed,
-                        image_url: img.uri,
-                    });
+                    const mappedCategory = CATEGORY_MAP[parsed.category] || "Diğer";
+                    await saveHealthEvent({ ...parsed, category: mappedCategory, image_url: img.uri });
                 } catch (err) {
                     console.error("❌ JSON parse error:", err);
                 }
@@ -182,6 +188,7 @@ export default function Chatbot() {
         }
     };
 
+    // Kamera
     const handleCamera = async () => {
         const img = await takePhotoWithCamera();
         if (img) {
@@ -193,10 +200,8 @@ export default function Chatbot() {
             if (jsonStr) {
                 try {
                     const parsed = JSON.parse(jsonStr);
-                    await saveHealthEvent({
-                        ...parsed,
-                        image_url: img.uri,
-                    });
+                    const mappedCategory = CATEGORY_MAP[parsed.category] || "Diğer";
+                    await saveHealthEvent({ ...parsed, category: mappedCategory, image_url: img.uri });
                 } catch (err) {
                     console.error("❌ JSON parse error:", err);
                 }
@@ -204,135 +209,4 @@ export default function Chatbot() {
         }
     };
 
-
-    // Render
-    const renderItem = ({ item }: { item: any }) => (
-        <View
-            style={[
-                styles.message,
-                item.role === "user" ? styles.userMessage : styles.botMessage,
-            ]}
-        >
-            {item.type === "image" ? (
-                <Image source={{ uri: item.uri }} style={styles.image} />
-            ) : (
-                <Text style={styles.messageText}>{item.text}</Text>
-            )}
-        </View>
-    );
-
-
-
-    return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 130 : 130}
-        >
-
-
-            {/* Mesajlar */}
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                renderItem={renderItem}
-                keyExtractor={(_, index) => index.toString()}
-                contentContainerStyle={styles.chatContainer}
-                onContentSizeChange={() =>
-                    flatListRef.current?.scrollToEnd({ animated: true })
-                }
-            />
-
-            {/* Input */}
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Bir şeyler yazın..."
-                    value={prompt}
-                    onChangeText={setPrompt}
-                    multiline
-                    onSubmitEditing={askGemini}
-                />
-                <TouchableOpacity
-                    style={styles.sendButton}
-                    onPress={askGemini}
-                    disabled={loading}
-                >
-                    <Text style={styles.sendButtonText}>{loading ? "..." : "➤"}</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Kamera / Galeri */}
-            <View style={styles.buttonRow}>
-                <Button title="🖼️ Galeri" onPress={handleGallery} />
-                <Button title="📷 Kamera" onPress={handleCamera} />
-            </View>
-        </KeyboardAvoidingView>
-    );
-}
-
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff" },
-    chatContainer: { padding: 10, flexGrow: 1, justifyContent: "flex-end" },
-    message: {
-        padding: 12,
-        borderRadius: 12,
-        marginVertical: 6,
-        maxWidth: "80%",
-    },
-    userMessage: {
-        backgroundColor: "#DCF8C6",
-        alignSelf: "flex-end",
-    },
-    botMessage: {
-        backgroundColor: "#F1F0F0",
-        alignSelf: "flex-start",
-    },
-    messageText: { fontSize: 16 },
-    inputContainer: {
-        flexDirection: "row",
-        padding: 10,
-        borderTopWidth: 1,
-        borderColor: "#ddd",
-        backgroundColor: "#fff",
-        alignItems: "center",
-    },
-    input: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        fontSize: 16,
-        maxHeight: 100,
-    },
-    sendButton: {
-        marginLeft: 10,
-        backgroundColor: "#007AFF",
-        borderRadius: 20,
-        padding: 10,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    sendButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        padding: 10,
-        borderTopWidth: 1,
-        borderColor: "#eee",
-    },
-    image: { width: 150, height: 150, borderRadius: 8 },
-    storyContainer: {
-        position: "absolute",
-        top: 40,
-        left: 10,
-        right: 0,
-        height: 200,
-    },
-
-
-});
-
-
+   
