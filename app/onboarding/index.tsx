@@ -6,15 +6,15 @@ export default function OnboardingIndex() {
 
     return (
         <View style={s.container}>
-            <Text style={s.title}>Başlangıç</Text>
-            <Text style={s.desc}>Devam etmek için bir seçenek seç:</Text>
+            <Text style={s.title}>HOŞGELDİNİZ</Text>
+            <Text style={s.desc}>Devam etmek için bir seçenek seçin:</Text>
 
             <TouchableOpacity style={s.btnPrimary} onPress={() => router.push('/choose-child')}>
-                <Text style={s.btnPrimaryText}>👶 Çocuk Seç</Text>
+                <Text style={s.btnPrimaryText}>👶 Çocuk Seçme</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={s.btnOutline} onPress={() => router.push('/onboarding/add-child')}>
-                <Text style={s.btnOutlineText}>➕ Çocuk Ekle</Text>
+                <Text style={s.btnOutlineText}>➕ Çocuk Ekleme</Text>
             </TouchableOpacity>
         </View>
     );

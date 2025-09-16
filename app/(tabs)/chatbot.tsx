@@ -1,8 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-
-const GEMINI_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY!;
-
-import { analyzeImage } from "@/src/api/gemini";
 import {
     View,
     Text,
@@ -13,38 +9,43 @@ import {
     KeyboardAvoidingView,
     Platform,
     Image,
-    Button,
+    Modal,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import {
     requestImagePermissions,
     pickImageFromGallery,
     takePhotoWithCamera,
 } from "@/src/utils/imageUtils";
+import { analyzeImage } from "@/src/api/gemini";
 // @ts-ignore
 import { saveHealthEvent } from "@/src/api/saveHealthEvent";
 
-// Ortak prompt
+const GEMINI_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY!;
+
 const BASE_PROMPT = `
 Sen Copi – Ebeveyn Sağlık Co-Pilotu'sun.
 Kullanıcı metin ya da fotoğraf gönderir.
 Çıktıyı her zaman şu JSON formatında ver:
 
 {
-  "category": "Hastalıklar | Boy-Kilo Analizleri | Doktor Notları| İlaçlar | Tahlil Sonuçları",
+  "category": "Hastalıklar | Boy-Kilo Analizleri | Doktor Notları | İlaçlar | Tahlil Sonuçları",
   "title": "Kısa başlık",
   "advice": "Tavsiye"
-
 }
 `;
 
 export default function Chatbot() {
     const [prompt, setPrompt] = useState("");
-    const [messages, setMessages] = useState<any[]>([]);
-    const [records, setRecords] = useState<any[]>([]);
+    const [messages, setMessages] = useState<any[]>([
+        { role: "bot", type: "text", text: "Merhaba 👋 Ben senin sağlık asistanın ShevmAI." },
+    ]);
     const [loading, setLoading] = useState(false);
     const flatListRef = useRef<FlatList>(null);
-    const [eventsByCategory, setEventsByCategory] = useState<{ [key: string]: any[] }>({});
 
+    const [conversations, setConversations] = useState<any[]>([]);
+    const [activeConv, setActiveConv] = useState<number | null>(null);
+    const [showSidebar, setShowSidebar] = useState(false);
 
     useEffect(() => {
         requestImagePermissions().catch((err) => console.warn(err.message));
@@ -55,76 +56,65 @@ export default function Chatbot() {
             flatListRef.current?.scrollToEnd({ animated: true });
         }
     }, [messages]);
+
     function extractJsonString(text: string): string | null {
-        // Regex ile JSON blok yakala
         const match = text.match(/\{[\s\S]*\}/);
         return match ? match[0] : null;
     }
 
     async function processAIResult(aiResult: string) {
-        console.log("🔍 AI result ham:", aiResult);
-
         try {
             const jsonStr = extractJsonString(aiResult);
-
             if (!jsonStr) {
-                console.warn("⚠️ AI cevabında JSON bulunamadı:", aiResult);
-                // JSON yoksa olduğu gibi metni göster
                 setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
                 return;
             }
 
             const parsed = JSON.parse(jsonStr);
-            console.log("✅ JSON parse başarılı:", parsed);
-
-            // Kaydet (Supabase’e JSON’u gönderiyoruz)
             await saveHealthEvent(parsed);
 
-            // Local state güncelle
-            setEventsByCategory((prev) => {
-                const cat = parsed.category || "diğer";
-                const current = prev[cat] || [];
-                return {
-                    ...prev,
-                    [cat]: [...current, parsed],
-                };
-            });
-
-            setRecords((prev) => [...prev, parsed]);
-
-            // ✅ Kullanıcıya sadece advice göster
-            if (parsed.title) {
-                setMessages((prev) => [
-                    ...prev,
-                    { role: "bot", type: "text", text: parsed.advice },
-                ]);
+            if (parsed.advice) {
+                setMessages((prev) => [...prev, { role: "bot", type: "text", text: parsed.advice }]);
             } else {
-                // advice yoksa sadece title gösterelim
                 setMessages((prev) => [
                     ...prev,
                     { role: "bot", type: "text", text: parsed.title ?? "Bir kayıt alındı." },
                 ]);
             }
-
         } catch (err) {
-            console.error("❌ JSON parse veya kayıt hatası:", err);
             setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
         }
     }
 
-
-
-    // Text
     const askGemini = async () => {
         if (!prompt.trim()) return;
         const newMessage = { role: "user", type: "text", text: prompt };
         setMessages((prev) => [...prev, newMessage]);
+
+        // aktif konuşma yoksa yeni oluştur
+        if (!activeConv) {
+            const newConv = {
+                id: Date.now(),
+                title: prompt,
+                messages: [newMessage],
+            };
+            setConversations((prev) => [...prev, newConv]);
+            setActiveConv(newConv.id);
+        } else {
+            setConversations((prev) =>
+                prev.map((conv) =>
+                    conv.id === activeConv
+                        ? { ...conv, messages: [...conv.messages, newMessage] }
+                        : conv
+                )
+            );
+        }
+
         setPrompt("");
         setLoading(true);
 
         try {
             const result = await fetch(
-
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
                 {
                     method: "POST",
@@ -132,9 +122,7 @@ export default function Chatbot() {
                     body: JSON.stringify({
                         contents: [
                             {
-                                parts: [
-                                    { text: BASE_PROMPT + "\n\nKullanıcı: " + newMessage.text },
-                                ],
+                                parts: [{ text: BASE_PROMPT + "\n\nKullanıcı: " + newMessage.text }],
                             },
                         ],
                     }),
@@ -142,12 +130,9 @@ export default function Chatbot() {
             );
 
             const data = await result.json();
-            const aiResult =
-                data?.candidates?.[0]?.content?.parts?.[0]?.text || "❌ Cevap alınamadı.";
-
+            const aiResult = data?.candidates?.[0]?.content?.parts?.[0]?.text || "❌ Cevap alınamadı.";
             await processAIResult(aiResult);
         } catch (error) {
-            console.error("⚠️ API çağrısı hatası:", error);
             setMessages((prev) => [
                 ...prev,
                 { role: "bot", type: "text", text: "⚠️ Hata: API çağrısı başarısız." },
@@ -157,55 +142,61 @@ export default function Chatbot() {
         }
     };
 
-    // Galeri
-
     const handleGallery = async () => {
         const img = await pickImageFromGallery();
         if (img) {
-            setMessages((prev) => [...prev, { role: "user", type: "image", uri: img.uri }]);
+            const newMessage = { role: "user", type: "image", uri: img.uri };
+            setMessages((prev) => [...prev, newMessage]);
+
+            if (activeConv) {
+                setConversations((prev) =>
+                    prev.map((conv) =>
+                        conv.id === activeConv
+                            ? { ...conv, messages: [...conv.messages, newMessage] }
+                            : conv
+                    )
+                );
+            }
 
             const aiResult = await analyzeImage(img.base64!, BASE_PROMPT);
-            const jsonStr = extractJsonString(aiResult);
-
-            if (jsonStr) {
-                try {
-                    const parsed = JSON.parse(jsonStr);
-                    // 🔹 resmi de kaydet
-                    await saveHealthEvent({
-                        ...parsed,
-                        image_url: img.uri,
-                    });
-                } catch (err) {
-                    console.error("❌ JSON parse error:", err);
-                }
-            }
+            await processAIResult(aiResult);
         }
     };
 
     const handleCamera = async () => {
         const img = await takePhotoWithCamera();
         if (img) {
-            setMessages((prev) => [...prev, { role: "user", type: "image", uri: img.uri }]);
+            const newMessage = { role: "user", type: "image", uri: img.uri };
+            setMessages((prev) => [...prev, newMessage]);
+
+            if (activeConv) {
+                setConversations((prev) =>
+                    prev.map((conv) =>
+                        conv.id === activeConv
+                            ? { ...conv, messages: [...conv.messages, newMessage] }
+                            : conv
+                    )
+                );
+            }
 
             const aiResult = await analyzeImage(img.base64!, BASE_PROMPT);
-            const jsonStr = extractJsonString(aiResult);
-
-            if (jsonStr) {
-                try {
-                    const parsed = JSON.parse(jsonStr);
-                    await saveHealthEvent({
-                        ...parsed,
-                        image_url: img.uri,
-                    });
-                } catch (err) {
-                    console.error("❌ JSON parse error:", err);
-                }
-            }
+            await processAIResult(aiResult);
         }
     };
 
+    const startNewConversation = () => {
+        const newConv = {
+            id: Date.now(),
+            title: `Konuşma ${conversations.length + 1}`,
+            messages: [
+                { role: "bot", type: "text", text: "Yeni konuşma başlatıldı 👋" },
+            ],
+        };
+        setConversations((prev) => [...prev, newConv]);
+        setActiveConv(newConv.id);
+        setMessages(newConv.messages);
+    };
 
-    // Render
     const renderItem = ({ item }: { item: any }) => (
         <View
             style={[
@@ -221,15 +212,22 @@ export default function Chatbot() {
         </View>
     );
 
-
-
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 130 : 130}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 160}
         >
-
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => setShowSidebar(true)}>
+                    <Ionicons name="menu" size={24} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>ShevmAI</Text>
+                <TouchableOpacity onPress={startNewConversation}>
+                    <Ionicons name="add-circle" size={26} color="#fff" />
+                </TouchableOpacity>
+            </View>
 
             {/* Mesajlar */}
             <FlatList
@@ -238,41 +236,81 @@ export default function Chatbot() {
                 renderItem={renderItem}
                 keyExtractor={(_, index) => index.toString()}
                 contentContainerStyle={styles.chatContainer}
-                onContentSizeChange={() =>
-                    flatListRef.current?.scrollToEnd({ animated: true })
-                }
+                onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
 
-            {/* Input */}
+            {/* Input + Kamera/Galeri */}
             <View style={styles.inputContainer}>
+                <TouchableOpacity onPress={handleGallery}>
+                    <Ionicons name="image-outline" size={26} color="#60a5fa" style={{ marginRight: 10 }} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleCamera}>
+                    <Ionicons name="camera-outline" size={26} color="#60a5fa" style={{ marginRight: 10 }} />
+                </TouchableOpacity>
                 <TextInput
                     style={styles.input}
-                    placeholder="Bir şeyler yazın..."
+                    placeholder="Bir şeyler yaz..."
+                    placeholderTextColor="#94a3b8"
                     value={prompt}
                     onChangeText={setPrompt}
                     multiline
-                    onSubmitEditing={askGemini}
                 />
-                <TouchableOpacity
-                    style={styles.sendButton}
-                    onPress={askGemini}
-                    disabled={loading}
-                >
+                <TouchableOpacity style={styles.sendButton} onPress={askGemini} disabled={loading}>
                     <Text style={styles.sendButtonText}>{loading ? "..." : "➤"}</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Kamera / Galeri */}
-            <View style={styles.buttonRow}>
-                <Button title="🖼️ Galeri" onPress={handleGallery} />
-                <Button title="📷 Kamera" onPress={handleCamera} />
-            </View>
+            {/* Sidebar */}
+            <Modal visible={showSidebar} animationType="slide" transparent>
+                <View style={styles.sidebarOverlay}>
+                    <View style={styles.sidebarContainer}>
+                        <View style={styles.sidebar}>
+                            <Text style={styles.sidebarTitle}>Eski Konuşmalar</Text>
+
+                            <FlatList
+                                data={conversations}
+                                keyExtractor={(item) => String(item.id)}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        style={styles.sidebarItem}
+                                        onPress={() => {
+                                            setActiveConv(item.id);
+                                            setMessages(item.messages); // eski konuşmayı aç
+                                            setShowSidebar(false);
+                                        }}
+                                    >
+                                        <Ionicons name="chatbubbles-outline" size={18} color="#e2e8f0" />
+                                        <Text numberOfLines={1} style={styles.sidebarText}>
+                                            {item.title}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            />
+
+                            <TouchableOpacity
+                                style={styles.sidebarClose}
+                                onPress={() => setShowSidebar(false)}
+                            >
+                                <Ionicons name="close" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#fff" },
+    container: { flex: 1, backgroundColor: "#0f172a" },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: 15,
+        backgroundColor: "#1e293b",
+    },
+    headerTitle: { color: "#fff", fontSize: 18, fontWeight: "bold" },
     chatContainer: { padding: 10, flexGrow: 1, justifyContent: "flex-end" },
     message: {
         padding: 12,
@@ -281,58 +319,73 @@ const styles = StyleSheet.create({
         maxWidth: "80%",
     },
     userMessage: {
-        backgroundColor: "#DCF8C6",
+        backgroundColor: "#2563eb",
         alignSelf: "flex-end",
     },
     botMessage: {
-        backgroundColor: "#F1F0F0",
+        backgroundColor: "#334155",
         alignSelf: "flex-start",
     },
-    messageText: { fontSize: 16 },
+    messageText: { fontSize: 16, color: "#fff" },
     inputContainer: {
         flexDirection: "row",
         padding: 10,
         borderTopWidth: 1,
-        borderColor: "#ddd",
-        backgroundColor: "#fff",
+        borderColor: "#1e293b",
+        backgroundColor: "#0f172a",
         alignItems: "center",
     },
     input: {
         flex: 1,
         borderWidth: 1,
-        borderColor: "#ccc",
+        borderColor: "#475569",
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 8,
         fontSize: 16,
+        color: "#fff",
         maxHeight: 100,
     },
     sendButton: {
         marginLeft: 10,
-        backgroundColor: "#007AFF",
+        backgroundColor: "#2563eb",
         borderRadius: 20,
         padding: 10,
         justifyContent: "center",
         alignItems: "center",
     },
     sendButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        padding: 10,
-        borderTopWidth: 1,
-        borderColor: "#eee",
-    },
     image: { width: 150, height: 150, borderRadius: 8 },
-    storyContainer: {
-        position: "absolute",
-        top: 40,
-        left: 10,
-        right: 0,
-        height: 200,
+    sidebarOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        alignItems: "flex-start",
+        justifyContent: "flex-start",
     },
-
-
+    sidebarContainer: {
+        marginTop: 60, // Header hizası
+        height: "80%", // altı boş kalır
+    },
+    sidebar: {
+        width: 260,
+        height: "100%",
+        backgroundColor: "#1e293b",
+        padding: 16,
+        borderTopRightRadius: 12,
+        borderBottomRightRadius: 12,
+    },
+    sidebarTitle: { fontSize: 18, fontWeight: "700", marginBottom: 12, color: "#fff" },
+    sidebarItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderColor: "#334155",
+    },
+    sidebarText: {
+        color: "#e2e8f0",
+        fontSize: 14,
+        marginLeft: 8,
+    },
+    sidebarClose: { position: "absolute", top: 10, right: 10 },
 });
-
-

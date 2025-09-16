@@ -17,7 +17,6 @@ const DEFAULT_CATEGORIES = [
     { id: "c3", title: "Doktor Notları" },
     { id: "c4", title: "İlaçlar" },
     { id: "c5", title: "Tahlil Sonuçları" },
-    // { id: "c6", title: "Doktor Notu" },
 ];
 
 export default function HomeScreen() {
@@ -38,43 +37,24 @@ export default function HomeScreen() {
         })();
     }, []);
 
-    // 🔹 son kayıtları kategoriye göre bul
-    const getLatestForCategory = (cat: string) => {
-        const found = records.find(
-            (r) => r.category.toLowerCase() === cat.toLowerCase()
-        );
-        return found
-            ? { subtitle: found.title, details: found.advice || found.details || "" }
-            : { subtitle: "Henüz kayıt yok", details: "" };
-    };
-
-
-    // 🔹 takvimde işaretlenecek günler
-    const markedDates = records.reduce((acc, r) => {
-        const date = r.created_at.slice(0, 10); // YYYY-MM-DD
-        acc[date] = { marked: true, dotColor: "#3b82f6" };
-        return acc;
-    }, {} as any);
-
     return (
         <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
-            {/* 📌 Üstte scrollable kategori kartları */}
+            {/* 📌 Kategoriler */}
             <Text style={styles.sectionTitle}>Kategoriler</Text>
             <FlatList
                 data={DEFAULT_CATEGORIES}
                 horizontal
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => {
-                    const latest = getLatestForCategory(item.title);
-                    return (
-                        <CardButton
-                            title={item.title}
-                            subtitle={latest.subtitle}
-                            details={latest.details}
-
-                        />
-                    );
-                }}
+                renderItem={({ item }) => (
+                    <CardButton
+                        title={item.title}
+                        records={records.filter(
+                            (r) =>
+                                r.category.toLowerCase() ===
+                                item.title.toLowerCase()
+                        )}
+                    />
+                )}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             />
@@ -84,7 +64,11 @@ export default function HomeScreen() {
             <View style={styles.calendarWrap}>
                 <Calendar
                     current={new Date().toISOString().slice(0, 10)}
-                    markedDates={markedDates}
+                    markedDates={records.reduce((acc, r) => {
+                        const date = r.created_at.slice(0, 10);
+                        acc[date] = { marked: true, dotColor: "#3b82f6" };
+                        return acc;
+                    }, {} as any)}
                     theme={{
                         backgroundColor: "#fff",
                         calendarBackground: "#fff",
@@ -97,7 +81,7 @@ export default function HomeScreen() {
                 />
             </View>
 
-            {/* 📌 Sağlık Özeti Kartı */}
+            {/* 📌 Sağlık Özeti */}
             <Text style={styles.sectionTitle}>Sağlık Özeti</Text>
             <View style={{ paddingHorizontal: 16 }}>
                 <CardButton
