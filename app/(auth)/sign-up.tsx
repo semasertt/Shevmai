@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Alert,
+    TouchableWithoutFeedback,
+    KeyboardAvoidingView, Platform, Keyboard
+} from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 
@@ -41,25 +49,63 @@ export default function SignUp() {
 
 
     return (
-        <View style={{ flex:1, justifyContent:"center", padding:20, gap:12 }}>
-            <Text style={{ fontSize:26, fontWeight:"800", textAlign:"center" }}>Kayıt Ol</Text>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={{ flex: 1 }}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+                <View style={{ flex: 1, justifyContent: "center", padding: 20, gap: 12 }}>
+                    <Text style={{ fontSize: 26, fontWeight: "800", textAlign: "center" }}>
+                        Kayıt Ol
+                    </Text>
 
-            <TextInput placeholder="Kullanıcı adı" value={username} onChangeText={setUsername}
-                       autoCapitalize="none" style={{ borderWidth:1, padding:12, borderRadius:10 }} />
-            <TextInput placeholder="E-posta" value={email} onChangeText={setEmail}
-                       autoCapitalize="none" keyboardType="email-address"
-                       style={{ borderWidth:1, padding:12, borderRadius:10 }} />
-            <TextInput placeholder="Şifre" value={password} onChangeText={setPassword}
-                       secureTextEntry style={{ borderWidth:1, padding:12, borderRadius:10 }} />
+                    <TextInput
+                        placeholder="Kullanıcı adı"
+                        value={username}
+                        onChangeText={setUsername}
+                        autoCapitalize="none"
+                        style={{ borderWidth: 1, padding: 12, borderRadius: 10 }}
+                    />
+                    <TextInput
+                        placeholder="E-posta"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        style={{ borderWidth: 1, padding: 12, borderRadius: 10 }}
+                    />
+                    <TextInput
+                        placeholder="Şifre"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                        style={{ borderWidth: 1, padding: 12, borderRadius: 10 }}
+                    />
 
-            <TouchableOpacity onPress={onSignUp}
-                              style={{ backgroundColor:"#22c55e", padding:14, borderRadius:12 }}>
-                <Text style={{ textAlign:"center", fontWeight:"800", color:"#fff" }}>Kayıt Ol</Text>
-            </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={onSignUp}
+                        style={{
+                            backgroundColor: "#22c55e",
+                            padding: 14,
+                            borderRadius: 12,
+                        }}
+                    >
+                        <Text
+                            style={{
+                                textAlign: "center",
+                                fontWeight: "800",
+                                color: "#fff",
+                            }}
+                        >
+                            Kayıt Ol
+                        </Text>
+                    </TouchableOpacity>
 
-            <Text style={{ textAlign:"center" }}>
-                Zaten hesabın var mı? <Link href="/(auth)/sign-in">Giriş yap</Link>
-            </Text>
-        </View>
+                    <Text style={{ textAlign: "center" }}>
+                        Zaten hesabın var mı? <Link href="/(auth)/sign-in">Giriş yap</Link>
+                    </Text>
+                </View>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 }

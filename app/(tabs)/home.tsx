@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import {View, Text, ActivityIndicator, TouchableOpacity, Animated} from 'react-native';
 import { fetchChildren, getSelectedChild } from '@/services/children';
 import type { Child } from '@/types';
 import { router } from 'expo-router';
+import ScrollView = Animated.ScrollView;
+
+
+const CATEGORIES = ["belirti", "ilaç", "aşı", "ölçüm", "tetkik", "doktorNotu"]; //isteğe göre yenisini ekleriz
+
 
 export default function Home() {
     const [child, setChild] = useState<Child | null>(null);
@@ -36,18 +41,54 @@ export default function Home() {
         </View>;
     }
 
+    // @ts-ignore
+
+    // @ts-ignore
     return (
         <View style={{ flex:1, padding:16 }}>
             <Text style={{ fontSize:18, fontWeight:'700' }}>Merhaba, {child.name} 👋</Text>
             <Text style={{ color:'#6b7280', marginTop:6 }}>
                 Bu ekran seçili çocuk ile çalışır. İstersen değiştir:
             </Text>
-            <TouchableOpacity
-                onPress={() => router.push('/choose-child')}
-                style={{ marginTop:12, borderWidth:1, borderColor:'#e5e7eb', padding:10, borderRadius:10 }}
+
+
+            {/* 📌 Kategori Butonları (semanın kısmıyla değişecek) */}
+
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginTop: 16 }}
             >
-                <Text>Çocuk Değiştir</Text>
-            </TouchableOpacity>
+                {CATEGORIES.map((cat) => (
+                    <TouchableOpacity
+                        key={cat}
+                        onPress={() =>
+                            router.push({
+                                pathname: "/categories/category",
+                                params: { category: cat },
+                            })
+                        }
+                        style={{
+                            width: 150,
+                            height: 70,
+                            backgroundColor: "#2563eb",
+                            paddingVertical: 12,
+                            paddingHorizontal: 20,
+                            borderRadius: 9999,
+                            marginRight: 12,
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <Text style={{ color: "#fff", fontWeight: "600" }}>
+                            {cat.toUpperCase()}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+
+
         </View>
     );
 }
