@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Modal, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
     title: string;
     subtitle: string;
     details: string;
-    variant?: 'default' | 'full'; // normal kart ya da tam genişlik sağlık özeti
+    imageUrl?: string;   // ✅ yeni eklendi
+    variant?: 'default' | 'full';
 };
 
-export default function CardButton({ title, subtitle, details, variant = 'default' }: Props) {
+export default function CardButton({ title, subtitle, details, imageUrl, variant = 'default' }: Props) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -18,7 +19,7 @@ export default function CardButton({ title, subtitle, details, variant = 'defaul
                 onPress={() => setOpen(true)}
                 style={[
                     styles.card,
-                    variant === 'full' && styles.fullCard, // sağlık özeti için özel stil
+                    variant === 'full' && styles.fullCard,
                 ]}
             >
                 {/* süs daireler */}
@@ -28,6 +29,14 @@ export default function CardButton({ title, subtitle, details, variant = 'defaul
                 <View style={{ zIndex: 2 }}>
                     <Text style={styles.title}>{title}</Text>
                     <Text style={styles.subtitle}>{subtitle}</Text>
+
+                    {/* ✅ küçük resim ekle */}
+                    {imageUrl ? (
+                        <Image
+                            source={{ uri: imageUrl }}
+                            style={styles.cardImage}
+                        />
+                    ) : null}
                 </View>
 
                 <Pressable style={styles.menuBtn} onPress={() => setOpen(true)}>
@@ -44,6 +53,14 @@ export default function CardButton({ title, subtitle, details, variant = 'defaul
                         </TouchableOpacity>
                         <Text style={styles.modalTitle}>{title} Detay</Text>
                         <Text style={styles.modalText}>{details}</Text>
+
+                        {/* ✅ modalda büyük resim */}
+                        {imageUrl ? (
+                            <Image
+                                source={{ uri: imageUrl }}
+                                style={styles.modalImage}
+                            />
+                        ) : null}
                     </View>
                 </View>
             </Modal>
@@ -54,14 +71,13 @@ export default function CardButton({ title, subtitle, details, variant = 'defaul
 const styles = StyleSheet.create({
     card: {
         width: 200,
-        height: 120,
+        height: 140, // ✅ biraz büyüttüm ki resim sığsın
         borderRadius: 16,
         padding: 16,
         marginRight: 12,
         overflow: 'hidden',
         justifyContent: 'center',
-        backgroundColor: '#1e3a8a', // ana kart rengi (koyu mavi)
-        // gölge
+        backgroundColor: '#1e3a8a',
         shadowColor: '#000',
         shadowOpacity: 0.2,
         shadowRadius: 10,
@@ -70,7 +86,7 @@ const styles = StyleSheet.create({
     },
     fullCard: {
         width: '100%',
-        height: 160,
+        height: 180,
         marginRight: 0,
         marginTop: 12,
     },
@@ -83,7 +99,13 @@ const styles = StyleSheet.create({
     },
     menuBtn: { position: 'absolute', top: 10, right: 10, zIndex: 3 },
     title: { fontSize: 18, fontWeight: '700', color: '#fff' },
-    subtitle: { fontSize: 14, color: '#c7d2fe', marginTop: 2 }, // açık mor-mavi
+    subtitle: { fontSize: 14, color: '#c7d2fe', marginTop: 2 },
+    cardImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        marginTop: 8,
+    },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.4)',
@@ -91,13 +113,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: '80%',
-        height: '80%',
+        width: '100%',
+        height: '100%',
         backgroundColor: '#fff',
         borderRadius: 16,
         padding: 20,
     },
     closeBtn: { position: 'absolute', top: 10, right: 10 },
     modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
-    modalText: { fontSize: 14, color: '#333' },
+    modalText: { fontSize: 14, color: '#333', marginBottom: 12 },
+    modalImage: {
+        width: '100%',
+        height: 250,
+        borderRadius: 12,
+        marginTop: 8,
+    },
 });

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const GEMINI_KEY = 'AIzaSyAhEfCRjhxxlFg9TWCsPHzPf1uCao3iXho';
+const GEMINI_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY!;
 
 import { analyzeImage } from "@/src/api/gemini";
 import {
@@ -30,7 +30,7 @@ Kullanıcı metin ya da fotoğraf gönderir.
 Çıktıyı her zaman şu JSON formatında ver:
 
 {
-  "category": "ölçüm | aşı | ilaç | belirti | tetkik | doktorNotu",
+  "category": "Hastalıklar | Boy-Kilo Analizleri | Doktor Notları| İlaçlar | Tahlil Sonuçları",
   "title": "Kısa başlık",
   "advice": "Tavsiye"
 
@@ -93,7 +93,7 @@ export default function Chatbot() {
             setRecords((prev) => [...prev, parsed]);
 
             // ✅ Kullanıcıya sadece advice göster
-            if (parsed.advice) {
+            if (parsed.title) {
                 setMessages((prev) => [
                     ...prev,
                     { role: "bot", type: "text", text: parsed.advice },
