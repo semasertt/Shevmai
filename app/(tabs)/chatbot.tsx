@@ -62,7 +62,7 @@ export default function Chatbot() {
     return match ? match[0] : null;
   }
 
-  async function processAIResult(aiResult: string) {
+  async function processAIResult(aiResult: string, image_url?: string) {
     try {
       const jsonStr = extractJsonString(aiResult);
       if (!jsonStr) {
@@ -71,8 +71,10 @@ export default function Chatbot() {
       }
 
       const parsed = JSON.parse(jsonStr);
-      await saveHealthEvent(parsed);
-
+        await saveHealthEvent({
+            ...parsed,
+            image_url, //
+        });
       if (parsed.advice) {
         setMessages((prev) => [...prev, { role: "bot", type: "text", text: parsed.advice }]);
       } else {
@@ -159,7 +161,7 @@ export default function Chatbot() {
       }
 
       const aiResult = await analyzeImage(img.base64!, BASE_PROMPT);
-      await processAIResult(aiResult);
+        await processAIResult(aiResult, img.uri);
     }
   };
 
@@ -180,7 +182,7 @@ export default function Chatbot() {
       }
 
       const aiResult = await analyzeImage(img.base64!, BASE_PROMPT);
-      await processAIResult(aiResult);
+        await processAIResult(aiResult, img.uri);
     }
   };
 

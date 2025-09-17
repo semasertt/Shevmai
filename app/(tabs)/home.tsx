@@ -21,6 +21,7 @@ const DEFAULT_CATEGORIES = [
 
 export default function HomeScreen() {
     const [records, setRecords] = useState<any[]>([]);
+    const [recordsByCategory, setRecordsByCategory] = useState<{ [key: string]: any[] }>({});
 
     useEffect(() => {
         (async () => {
@@ -33,7 +34,18 @@ export default function HomeScreen() {
                 .eq("child_id", childId)
                 .order("created_at", { ascending: false });
 
-            if (!error && data) setRecords(data);
+            if (!error && data) {
+                setRecords(data);
+
+                // 🔹 kategoriye göre grupla
+                const grouped: { [key: string]: any[] } = {};
+                data.forEach((rec) => {
+                    const cat = rec.category || "Diğer";
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(rec);
+                });
+                setRecordsByCategory(grouped);
+            }
         })();
     }, []);
 
@@ -48,17 +60,25 @@ export default function HomeScreen() {
                 renderItem={({ item }) => (
                     <CardButton
                         title={item.title}
-                        records={records.filter(
-                            (r) =>
-                                r.category.toLowerCase() ===
-                                item.title.toLowerCase()
-                        )}
+                        // ✅ sadece o kategoriye ait kayıtları gönder
+                        records={recordsByCategory[item.title] || []}
                     />
                 )}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             />
 
+
+
+            {/* 📌 Sağlık Özeti */}
+            <Text style={styles.sectionTitle}>Sağlık Özeti</Text>
+            <View style={{ paddingHorizontal: 16 }}>
+                <CardButton
+                    title="Genel Sağlık Durumu"
+                    subtitle="Son kontrol: Normal"
+                    variant="full"
+                />
+            </View>
             {/* 📌 Takvim */}
             <Text style={styles.sectionTitle}>Takvim</Text>
             <View style={styles.calendarWrap}>
@@ -78,19 +98,6 @@ export default function HomeScreen() {
                         arrowColor: "#3b82f6",
                         monthTextColor: "#111827",
                     }}
-                />
-            </View>
-
-            {/* 📌 Sağlık Özeti */}
-            <Text style={styles.sectionTitle}>Sağlık Özeti</Text>
-            <View style={{ paddingHorizontal: 16 }}>
-                <CardButton
-                    title="Genel Sağlık Durumu"
-                    subtitle="Son kontrol: Normal"
-                    details={`Çocuğun genel sağlık durumu iyi 👍
-Kilo ve boy gelişimi percentile aralığında.
-Aşı takvimi güncel.`}
-                    variant="full"
                 />
             </View>
         </ScrollView>
