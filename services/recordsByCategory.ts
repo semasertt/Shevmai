@@ -20,22 +20,35 @@ export type RecordsByCategory = {
     [key: string]: HealthRecord[];
 };
 
-export async function fetchRecordsByCategory(): Promise<RecordsByCategory> {
+// services/healthEvents.ts - Mevcut fonksiyona ekle
+export async function fetchRecordsByCategory(category?: string): Promise<RecordsByCategory | HealthRecord[]> {
     const childId = await getSelectedChild();
-    if (!childId) return {};
+    if (!childId) return category ? [] : {};
 
-    const { data, error } = await supabase
+    let query = supabase
         .from("health_events")
         .select("*")
         .eq("child_id", childId)
         .order("created_at", { ascending: false });
 
-    if (error || !data) {
-        console.error(error);
-        return {};
+    // Eğer spesifik kategori istendiyse
+    if (category) {
+        query = query.eq("category", category);
     }
 
-    // 🔹 kategorilere göre grupla
+    const { data, error } = await query;
+
+    if (error || !data) {
+        console.error(error);
+        return category ? [] : {};
+    }
+
+    // Eğer spesifik kategori istendiyse, direkt dizi dön
+    if (category) {
+        return data;
+    }
+
+    // Tüm kategorileri grupla
     const grouped: RecordsByCategory = {};
     for (const record of data) {
         const cat = record.category || "Diğer";

@@ -1,97 +1,116 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
+import { View, Text, StyleSheet, Image, ViewStyle, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 
-type Props = {
+interface Props {
     title: string;
     subtitle?: string;
-    details?: string;
-    imageUrl?: string;
+    variant?: 'default' | 'full';
     records?: any[];
-    variant?: "default" | "full";
-};
+    categoryId?: string;
+    onPress?: () => void;
+    style?: ViewStyle;
+}
 
 export default function CardButton({
                                        title,
                                        subtitle,
-                                       details,
-                                       imageUrl,
+                                       variant = 'default',
                                        records = [],
-                                       variant = "default",
+                                       categoryId,
+                                       onPress,
+                                       style
                                    }: Props) {
+
+    const containerStyle = variant === 'full' ? styles.fullContainer : styles.container;
+
     return (
-        <Pressable
-            onPress={() =>
-                router.push({
-                    pathname: "/categories/category",
-                    params: {
-                        category: title,
-                        records: JSON.stringify(records), // ✅ dizi parametreye string olarak
-                    },
-                })
-            }
-            style={[styles.card, variant === "full" && styles.fullCard]}
+        <TouchableOpacity
+            style={[containerStyle, style]}
+            onPress={onPress}
         >
-            {/* süs daireler */}
-            <View
-                style={[styles.circle, { backgroundColor: "#312e81", top: -50, right: -30 }]}
-            />
-            <View
-                style={[styles.circle, { backgroundColor: "#4f46e5", top: -80, right: -40 }]}
-            />
+            {/* ✅ Arkaplan süs daireleri - Sadece default variant için */}
+            {variant === 'default' && (
+                <>
+                    <View
+                        style={[styles.circle, { backgroundColor: "#312e81", top: -50, right: -30 }]}
+                    />
+                    <View
+                        style={[styles.circle, { backgroundColor: "#4f46e5", top: -80, right: -40 }]}
+                    />
+                </>
+            )}
 
             <View style={{ zIndex: 2 }}>
                 <Text style={styles.title}>{title}</Text>
-                {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-                {imageUrl ? (
-                    <Image source={{ uri: imageUrl }} style={styles.cardImage} />
-                ) : null}
+                {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+                {records.length > 0 && (
+                    <Text style={styles.count}>{records.length} kayıt</Text>
+                )}
             </View>
 
-            <Pressable style={styles.menuBtn}>
-                <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
-            </Pressable>
-        </Pressable>
+            {/* ✅ Menü butonu - Sadece default variant için */}
+            {variant === 'default' && (
+                <View style={styles.menuBtn}>
+                    <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
+                </View>
+            )}
+        </TouchableOpacity>
     );
 }
 
 const styles = StyleSheet.create({
-    card: {
-        width: 200,
-        height: 120,
-        borderRadius: 16,
+    container: {
+        backgroundColor: '#1e3a8a',
         padding: 16,
+        borderRadius: 16,
         marginRight: 12,
+        width: 140,
+        height: 120,
+        justifyContent: 'center',
         overflow: "hidden",
-        justifyContent: "center",
-        backgroundColor: "#1e3a8a",
+        position: "relative",
+        // Gölge efekti
         shadowColor: "#000",
         shadowOpacity: 0.2,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
         elevation: 6,
     },
-    fullCard: {
-        width: "100%",
-        height: 160,
-        marginRight: 0,
-        marginTop: 12,
+    fullContainer: {
+        backgroundColor: '#1e293b',
+        padding: 16,
+        borderRadius: 12,
+        marginVertical: 4,
     },
+    title: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    subtitle: {
+        color: '#c7d2fe',
+        fontSize: 14,
+    },
+    count: {
+        color: '#60a5fa',
+        fontSize: 12,
+        marginTop: 8,
+    },
+    // ✅ Yeni eklenen stiller
     circle: {
         position: "absolute",
         width: 120,
         height: 120,
         borderRadius: 60,
         opacity: 0.25,
+        zIndex: 1,
     },
-    menuBtn: { position: "absolute", top: 10, right: 10, zIndex: 3 },
-    title: { fontSize: 18, fontWeight: "700", color: "#fff" },
-    subtitle: { fontSize: 14, color: "#c7d2fe", marginTop: 2 },
-    cardImage: {
-        width: 80,
-        height: 80,
-        borderRadius: 8,
-        marginTop: 8,
+    menuBtn: {
+        position: "absolute",
+        top: 10,
+        right: 10,
+        zIndex: 3
     },
 });
