@@ -10,45 +10,95 @@ import { Calendar } from "react-native-calendars";
 import { supabase } from "@/lib/supabase";
 import { getSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
+import { useRouter } from "expo-router";
 
 const DEFAULT_CATEGORIES = [
-    { id: "c1", title: "Hastalıklar" },
-    { id: "c2", title: "Boy-Kilo Analizleri" },
-    { id: "c3", title: "Doktor Notları" },
-    { id: "c4", title: "İlaçlar" },
-    { id: "c5", title: "Tahlil Sonuçları" },
+    { id: "medicine", title: "💊 İlaçlar" },
+    { id: "fever", title: "🌡️ Ateş" },
+    { id: "measurement", title: "📏 Boy/Kilo" },
+    { id: "test", title: "🧪 Tahlil Sonuçları" },
+    { id: "symptom", title: "🤒 Hastalık/Belirti" },
+    { id: "nutrition", title: "🍎 Beslenme" },
+    { id: "sleep", title: "😴 Uyku" },
+    { id: "vaccine", title: "💉 Aşılar" },
+    { id: "emergency", title: "🚨 Acil Durum" },
+    { id: "other", title: "📝 Diğer" },
 ];
 
 export default function HomeScreen() {
+    const router = useRouter();
     const [records, setRecords] = useState<any[]>([]);
     const [recordsByCategory, setRecordsByCategory] = useState<{ [key: string]: any[] }>({});
 
     useEffect(() => {
-        (async () => {
-            const childId = await getSelectedChild();
-            if (!childId) return;
-
-            const { data, error } = await supabase
-                .from("health_events")
-                .select("*")
-                .eq("child_id", childId)
-                .order("created_at", { ascending: false });
-
-            if (!error && data) {
-                setRecords(data);
-
-                // 🔹 kategoriye göre grupla
-                const grouped: { [key: string]: any[] } = {};
-                data.forEach((rec) => {
-                    const cat = rec.category || "Diğer";
-                    if (!grouped[cat]) grouped[cat] = [];
-                    grouped[cat].push(rec);
-                });
-                setRecordsByCategory(grouped);
-            }
-        })();
+        loadHealthEvents();
     }, []);
 
+    const loadHealthEvents = async () => {
+        const childId = await getSelectedChild();
+        if (!childId) return;
+
+        const { data, error } = await supabase
+            .from("health_events")
+            .select("*")
+            .eq("child_id", childId)
+            .order("created_at", { ascending: false });
+
+        if (!error && data) {
+            setRecords(data);
+            groupRecordsByCategory(data);
+        }
+    };
+
+    const groupRecordsByCategory = (data: any[]) => {
+        const grouped: { [key: string]: any[] } = {};
+
+        // Önce tüm kategorileri boş array olarak oluştur
+        DEFAULT_CATEGORIES.forEach(cat => {
+            grouped[cat.title] = [];
+        });
+
+        // "Diğer" kategorisini de ekle
+        grouped["📝 Diğer"] = [];
+
+        // Kayıtları kategorilere göre grupla
+        data.forEach((rec) => {
+            const categoryTitle = findCategoryTitle(rec.category);
+            if (!grouped[categoryTitle]) {
+                grouped[categoryTitle] = [];
+            }
+            grouped[categoryTitle].push(rec);
+        });
+
+        setRecordsByCategory(grouped);
+    };
+
+    const findCategoryTitle = (category: string | null): string => {
+        if (!category) return "📝 Diğer";
+
+        const found = DEFAULT_CATEGORIES.find(
+            cat => cat.title.toLowerCase().includes(category.toLowerCase()) ||
+                category.toLowerCase().includes(cat.title.toLowerCase())
+        );
+
+        return found ? found.title : "📝 Diğer";
+    };
+
+// HomeScreen.tsx - handleCategoryPress fonksiyonunu güncelle
+    const handleCategoryPress = (categoryTitle: string) => {
+        const categoryRecords = recordsByCategory[categoryTitle] || [];
+
+        console.log("📤 Gönderilen kayıt sayısı:", categoryRecords.length);
+        console.log("📤 Gönderilen kategori:", categoryTitle);
+
+        router.push({
+            pathname: "/categories/category",
+            params: {
+                category: categoryTitle,
+                records: JSON.stringify(categoryRecords) // ← Kayıtları gönder
+            }
+        });
+    };
     return (
         <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             {/* 📌 Kategoriler */}
@@ -60,26 +110,26 @@ export default function HomeScreen() {
                 renderItem={({ item }) => (
                     <CardButton
                         title={item.title}
-                        // ✅ sadece o kategoriye ait kayıtları gönder
                         records={recordsByCategory[item.title] || []}
+                        // ✅ SADECE BURAYI DEĞİŞTİRDİK:
+                        onPress={() => handleCategoryPress(item.title)}
                     />
                 )}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             />
 
-
-
             {/* 📌 Sağlık Özeti */}
             <Text style={styles.sectionTitle}>Sağlık Özeti</Text>
             <View style={{ paddingHorizontal: 16 }}>
                 <CardButton
                     title="Genel Sağlık Durumu"
-                    subtitle="Son kontrol: Normal"
+                    subtitle={`Toplam ${records.length} kayıt`}
                     variant="full"
                 />
             </View>
-            {/* 📌 Takvim */}
+
+            {/* 📌 Takvim
             <Text style={styles.sectionTitle}>Takvim</Text>
             <View style={styles.calendarWrap}>
                 <Calendar
@@ -99,6 +149,20 @@ export default function HomeScreen() {
                         monthTextColor: "#111827",
                     }}
                 />
+            </View>
+*/}
+            {/* 📌 Son Kayıtlar */}
+            <Text style={styles.sectionTitle}>Son Kayıtlar</Text>
+            <View style={{ paddingHorizontal: 16 }}>
+                {records.slice(0, 3).map((record, index) => (
+                    <CardButton
+                        key={record.id}
+                        title={record.title}
+                        subtitle={record.details}
+                        variant="full"
+                        style={index > 0 ? { marginTop: 8 } : {}}
+                    />
+                ))}
             </View>
         </ScrollView>
     );

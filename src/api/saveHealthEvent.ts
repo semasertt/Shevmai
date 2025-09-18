@@ -1,35 +1,49 @@
-// services/healthEvents.ts
 import { supabase } from "@/lib/supabase";
 import { getSelectedChild } from "@/services/children";
 
+// services/healthEvents.ts
 export async function saveHealthEvent(payload: {
     category: string;
     title: string;
-    date?: string; //sonradan eklicem
-    details?: string;//sonradan eklicem
-    advice?: string;//sonradan eklicem
-    image_url?: string; // 🔹foto saklicaz
-
+    date?: string;
+    details?: string;
+    advice?: string;
+    image_url?: string; // ⬅️ Bu alanın olup olmadığını kontrol et
 }) {
-    // Kullanıcıyı al
-    const { data: userData, error: uErr } = await supabase.auth.getUser();
-    if (uErr || !userData?.user) throw new Error("Giriş gerekli.");
+    console.log("💾 Kayıt verisi:", payload);
 
-    // Seçili çocuğu al
-    const childId = await getSelectedChild();
-    if (!childId) throw new Error("Önce bir çocuk seçmelisin.");
+    try {
+        const { data: userData, error: uErr } = await supabase.auth.getUser();
+        if (uErr || !userData?.user) throw new Error("Giriş gerekli.");
 
-    // Supabase insert
-    const { error } = await supabase.from("health_events").insert({
-        user_id: userData.user.id,
-        child_id: childId,
-        ...payload,
-    });
+        const childId = await getSelectedChild();
+        if (!childId) throw new Error("Önce bir çocuk seçmelisin.");
 
-    if (error) {
-        console.error("❌ Supabase insert error:", error);
-        throw error;
+        // Görsel URI'sini de kaydet
+        const { data, error } = await supabase
+            .from("health_events")
+            .insert({
+                user_id: userData.user.id,
+                child_id: childId,
+                category: payload.category,
+                title: payload.title,
+                details: payload.details,
+                advice: payload.advice,
+                image_url: payload.image_url, // ⬅️ BURAYA EKLENDİ
+                date: payload.date || new Date().toISOString(),
+            })
+            .select();
+
+        if (error) {
+            console.error("❌ Supabase insert error:", error);
+            throw error;
+        }
+
+        console.log("✅ Görsel kaydı başarılı:", data);
+        return data?.[0]?.id ?? null;
+
+    } catch (err) {
+        console.error("❌ saveHealthEvent hatası:", err);
+        throw err;
     }
-
-    console.log("✅ Supabase insert başarılı:", payload);
 }
