@@ -42,7 +42,6 @@ export async function analyzeImage(base64: string, context: string, prompt?: str
         });
 
         const data = await res.json();
-        console.log("🔍 analyzeImage response:", JSON.stringify(data, null, 2));
 
         return data?.candidates?.[0]?.content?.parts?.[0]?.text || "❌ Görselden yanıt alınamadı.";
     } catch (err) {

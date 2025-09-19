@@ -26,32 +26,34 @@ import ChatMessage from "@/components/ui/ChatMessage";
 // @ts-ignore
 import Sidebar from "@/components/ui/Sidebar";
 import {supabase} from "@/lib/supabase";
+import {addFollowUpToEvent} from "@/src/api/saveHealthEvent";
 
 const BASE_PROMPT = `
-Sen Copi – Ebeveyn Sağlık Co-Pilotu'sun.
+Sen ebeveynlere destek olan sevecen bir çocuk sağlığı asistanısın
 Kullanıcı bir sağlık olayı (ilaç, ateş, boy-kilo, tahlil, beslenme vb.) girer.
 Senin görevin:
 
 1. Olayı kategorileştir.
-2. Eksik bilgi varsa belirt (örn. "neden ilaç verildi?", "çocuğun kilosu kaç kg?").
 3. İlaç ise dozu yaş/kilo ile kıyasla, doğru mu değil mi kontrol et.
 Yanıtın mutlaka geçerli JSON formatında olsun. JSON dışında hiçbir şey yazma.
 JSON dışında hiçbir metin yazma.
 
 {
-  "category": "...",
+mutlaka bu alanları döndür
+ {
+  "category": "Hastalık" | "Aşı" | "Semptom" | "Beslenme" | "Uyku" | "Tahlil Sonuçları" | "Atak Dönemleri" | "Diğer",
   "title": "Kısa başlık",
-  "summary": "Olayın özeti",
-  "analysis": "Eksik bilgiler ve mevcut bilgilere göre yorum",
-  "risk": "low | medium | high",
+  "details": "Geçmiş sohbetlere bakarak olayın daha ayrıntılı açıklaması",
+  "summary": "Geçmiş sohbetlere bakarak durumun kısa özeti",
+  "analysis": "Eksik bilgiler ve mevcut verilere göre yorum",
+  "risk": "low" | "medium" | "high" olarak belirle,
   "advice": "Ebeveyne pratik tavsiye",
-  "nextStep": "Bir sonraki yapılması gereken",
-  "questions": ["Eksik bilgi tamamlamak için 1-2 soru"]
+  "duration": "Süre bilgisi (örn: '2 gün', '5 saat'). Eğer süre belirtilmediyse 'null' yaz."
 }
 `;
 
 const FOLLOWUP_PROMPT = `
-Sen Copi – ebeveynlere destek olan sevecen bir çocuk sağlığı asistanısın.
+Sen ebeveynlere destek olan sevecen bir çocuk sağlığı asistanısın.
 Kullanıcı bir sağlık olayı kaydetti. Onunla sohbet ederken doktor gibi ama samimi ve anlaşılır konuş.
 
 Kurallar:
@@ -136,7 +138,10 @@ export default function Chatbot() {
                     `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
                     FOLLOWUP_PROMPT
                 );
+
+
                 setMessages((prev) => [...prev, { role: "bot", type: "text", text: followup }]);
+
                 return;
             }
 
@@ -194,11 +199,12 @@ export default function Chatbot() {
     };
 
 
-    // 🔹 Fotoğraf (galeri) - DÜZELTİLMİŞ
+    // 🔹 Fotoğraf (galeri) - GÜNCEL
     const handleGallery = async () => {
         const conversationHistory = messages
             .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
             .join("\n");
+
         try {
             const img = await pickImageFromGallery();
             if (!img) return;
@@ -207,12 +213,12 @@ export default function Chatbot() {
             setMessages((prev) => [...prev, newMessage]);
             setLoading(true);
 
-            // 1. Önce kayıt değer mi kontrol et (görselin kendisini analiz ederek)
+            // 1. Önce kayıt değer mi kontrol et
             const shouldSave = await checkIfImageRecordWorthy(img.base64!);
             console.log("📋 Görsel kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // ❌ Sadece sohbet - görseli basitçe yorumla
+                // ❌ Sadece sohbet
                 const aiAnswer = await analyzeImage(
                     img.base64!,
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
@@ -228,7 +234,6 @@ export default function Chatbot() {
                 `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
                 BASE_PROMPT
             );
-            console.log("📸 Görsel analiz sonucu:", aiResult);
 
             // 3. Kullanıcıya yanıt ver (FOLLOWUP_PROMPT ile)
             const aiAnswer = await analyzeImage(
@@ -237,9 +242,13 @@ export default function Chatbot() {
                 FOLLOWUP_PROMPT
             );
 
-            // 4. JSON'u işle ve DB'ye kaydet
-            const result = await processAIResult(aiResult, img.uri);
-            console.log("kaydedildi");
+            // 4. JSON'u işle ve DB'ye kaydet (aktif kayıt varsa append edecek!)
+            const result = await processAIResult(
+                aiResult,
+                img.uri,
+                activeEventId || pendingDetail
+            );
+            console.log("💾 Görsel işlendi ID:", result.eventId);
 
             if (result.eventId && !activeEventId) {
                 setActiveEventId(result.eventId);
@@ -270,13 +279,12 @@ export default function Chatbot() {
             setLoading(false);
         }
     };
-
-
-// 🔹 Fotoğraf (kamera) - DÜZELTİLMİŞ
+// 🔹 Fotoğraf (kamera) - GÜNCEL
     const handleCamera = async () => {
         const conversationHistory = messages
             .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
             .join("\n");
+
         try {
             const img = await takePhotoWithCamera();
             if (!img) return;
@@ -285,12 +293,12 @@ export default function Chatbot() {
             setMessages((prev) => [...prev, newMessage]);
             setLoading(true);
 
-            // 1. Önce kayıt değer mi kontrol et (görselin kendisini analiz ederek)
+            // 1. Önce kayıt değer mi kontrol et
             const shouldSave = await checkIfImageRecordWorthy(img.base64!);
             console.log("📋 Görsel kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // ❌ Sadece sohbet - görseli basitçe yorumla
+                // ❌ Sadece sohbet
                 const aiAnswer = await analyzeImage(
                     img.base64!,
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
@@ -306,7 +314,6 @@ export default function Chatbot() {
                 `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
                 BASE_PROMPT
             );
-            console.log("📸 Görsel analiz sonucu:", aiResult);
 
             // 3. Kullanıcıya yanıt ver (FOLLOWUP_PROMPT ile)
             const aiAnswer = await analyzeImage(
@@ -315,9 +322,13 @@ export default function Chatbot() {
                 FOLLOWUP_PROMPT
             );
 
-            // 4. JSON'u işle ve DB'ye kaydet
-            const result = await processAIResult(aiResult, img.uri);
-            console.log("kaydedildi");
+            // 4. JSON'u işle ve DB'ye kaydet (aktif kayıt varsa append edecek!)
+            const result = await processAIResult(
+                aiResult,
+                img.uri,
+                activeEventId || pendingDetail
+            );
+            console.log("💾 Görsel işlendi ID:", result.eventId);
 
             if (result.eventId && !activeEventId) {
                 setActiveEventId(result.eventId);
@@ -339,7 +350,7 @@ export default function Chatbot() {
             }
 
         } catch (err) {
-            console.error("❌ handlecamera error:", err);
+            console.error("❌ handleCamera error:", err);
             setMessages((prev) => [
                 ...prev,
                 { role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu." },
