@@ -1,121 +1,245 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
     View,
     Text,
     TextInput,
     TouchableOpacity,
-    ScrollView,
     Alert,
+    ScrollView,
     StyleSheet,
-    KeyboardAvoidingView,
     Platform,
+    KeyboardAvoidingView,
     TouchableWithoutFeedback,
     Keyboard,
 } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 
 export default function AddChild() {
     const [name, setName] = useState("");
-    const [birthdate, setBirthdate] = useState("");
+    const [birthDate, setBirthDate] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [gender, setGender] = useState("");
-    const [height, setHeight] = useState("");
-    const [weight, setWeight] = useState("");
+    const [height, setHeight] = useState(100);
+    const [weight, setWeight] = useState(10);
     const [sleepPattern, setSleepPattern] = useState("");
     const [allergies, setAllergies] = useState("");
     const [vaccines, setVaccines] = useState("");
     const [illnesses, setIllnesses] = useState("");
 
     const onSave = async () => {
-        if (!name.trim()) return Alert.alert("Uyarı", "İsim zorunlu");
+        if (!name.trim()) return Alert.alert("Uyarı", "İsim zorunludur.");
 
-        const { data: user } = await supabase.auth.getUser();
-        if (!user?.user) return Alert.alert("Hata", "Giriş yapılmamış");
+        try {
+            const { data: userData } = await supabase.auth.getUser();
+            if (!userData?.user) throw new Error("Giriş gerekli.");
 
-        const { error } = await supabase.from("children").insert({
-            name,
-            birthdate: birthdate || null,
-            gender: gender || null,
-            height: height || null,
-            weight: weight || null,
-            sleep_pattern: sleepPattern || null,
-            allergies: allergies || null,
-            vaccines: vaccines || null,
-            illnesses: illnesses || null,
-            owner_user_id: user.user.id,
-        });
+            const { data, error } = await supabase
+                .from("children")
+                .insert({
+                    name,
+                    birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
+                    gender,
+                    height: height.toString(),
+                    weight: weight.toString(),
+                    sleep_pattern: sleepPattern,
+                    allergies,
+                    vaccines,
+                    illnesses,
+                    owner_user_id: userData.user.id,
+                })
+                .select()
+                .single();
 
-        if (error) return Alert.alert("Hata", error.message);
+            if (error) throw error;
 
-        Alert.alert("Başarılı", "Çocuk eklendi.");
-        router.replace("/choose-child");
+            Alert.alert("Başarılı", `${name} eklendi.`);
+            router.replace("/choose-child");
+        } catch (err: any) {
+            Alert.alert("Hata", err.message ?? "Kaydedilemedi.");
+        }
     };
 
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.page}
+            style={{ flex: 1 }}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <ScrollView>
-                    <Text style={styles.title}>Yeni Çocuk Ekle</Text>
+                <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 40 }}>
+                    <Text style={styles.title}>👶 Yeni Çocuk Ekle</Text>
 
+                    {/* İsim */}
                     <View style={styles.card}>
+                        <Text style={styles.label}>İsim *</Text>
                         <TextInput
-                            placeholder="İsim *"
+                            placeholder="Örn: Elif"
                             value={name}
                             onChangeText={setName}
                             style={styles.input}
+                            placeholderTextColor="#6b7280"
                         />
-                        <TextInput
-                            placeholder="Doğum Tarihi (YYYY-MM-DD)"
-                            value={birthdate}
-                            onChangeText={setBirthdate}
+                    </View>
+
+                    {/* Doğum Tarihi */}
+                    <View style={styles.card}>
+                        <Text style={styles.label}>Doğum Tarihi</Text>
+                        <TouchableOpacity
+                            onPress={() => setShowDatePicker(true)}
                             style={styles.input}
-                        />
+                        >
+                            <Text style={{ color: birthDate ? "#111827" : "#6b7280" }}>
+                                {birthDate ? birthDate.toLocaleDateString("tr-TR") : "Tarih Seçin"}
+                            </Text>
+                        </TouchableOpacity>
+                        {showDatePicker && (
+                            <DateTimePicker
+                                value={birthDate || new Date()}
+                                mode="date"
+                                display="calendar"
+                                onChange={(event, selectedDate) => {
+                                    setShowDatePicker(false);
+                                    if (selectedDate) setBirthDate(selectedDate);
+                                }}
+                            />
+                        )}
+                    </View>
+
+                    {/* Cinsiyet */}
+                    <View style={styles.card}>
+                        <Text style={styles.label}>Cinsiyet</Text>
+                        <View style={{ flexDirection: "row", marginBottom: 4 }}>
+                            {["Erkek", "Kız"].map((option) => (
+                                <TouchableOpacity
+                                    key={option}
+                                    onPress={() => setGender(option)}
+                                    style={[
+                                        styles.genderBtn,
+                                        gender === option && styles.genderBtnSelected,
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.genderBtnText,
+                                            gender === option && styles.genderBtnTextSelected,
+                                        ]}
+                                    >
+                                        {option}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Boy */}
+                    <View style={styles.card}>
+                        <Text style={styles.label}>Boy (cm)</Text>
+                        <View style={styles.counterRow}>
+                            <TouchableOpacity
+                                onPress={() => setHeight((prev) => Math.max(30, prev - 1))}
+                                style={styles.counterBtn}
+                            >
+                                <Text style={styles.counterText}>-</Text>
+                            </TouchableOpacity>
+
+                            <TextInput
+                                value={height.toString()}
+                                onChangeText={(val) => {
+                                    const num = parseInt(val, 10);
+                                    if (!isNaN(num)) setHeight(num);
+                                }}
+                                keyboardType="numeric"
+                                style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
+                            />
+
+                            <TouchableOpacity
+                                onPress={() => setHeight((prev) => Math.min(250, prev + 1))}
+                                style={styles.counterBtn}
+                            >
+                                <Text style={styles.counterText}>+</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Kilo */}
+                    <View style={styles.card}>
+                        <Text style={styles.label}>Kilo (kg)</Text>
+                        <View style={styles.counterRow}>
+                            <TouchableOpacity
+                                onPress={() => setWeight((prev) => Math.max(1, prev - 1))}
+                                style={styles.counterBtn}
+                            >
+                                <Text style={styles.counterText}>-</Text>
+                            </TouchableOpacity>
+
+                            <TextInput
+                                value={weight.toString()}
+                                onChangeText={(val) => {
+                                    const num = parseInt(val, 10);
+                                    if (!isNaN(num)) setWeight(num);
+                                }}
+                                keyboardType="numeric"
+                                style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
+                            />
+
+                            <TouchableOpacity
+                                onPress={() => setWeight((prev) => Math.min(200, prev + 1))}
+                                style={styles.counterBtn}
+                            >
+                                <Text style={styles.counterText}>+</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Uyku Düzeni */}
+                    <View style={styles.card}>
+                        <Text style={styles.label}>Uyku Düzeni</Text>
+                        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map((option) => (
+                                <TouchableOpacity
+                                    key={option}
+                                    onPress={() => setSleepPattern(option)}
+                                    style={[
+                                        styles.genderBtn,
+                                        sleepPattern === option && styles.genderBtnSelected,
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.genderBtnText,
+                                            sleepPattern === option && styles.genderBtnTextSelected,
+                                        ]}
+                                    >
+                                        {option}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Diğer Alanlar */}
+                    <View style={styles.card}>
                         <TextInput
-                            placeholder="Cinsiyet"
-                            value={gender}
-                            onChangeText={setGender}
-                            style={styles.input}
-                        />
-                        <TextInput
-                            placeholder="Boy (cm)"
-                            value={height}
-                            onChangeText={setHeight}
-                            keyboardType="numeric"
-                            style={styles.input}
-                        />
-                        <TextInput
-                            placeholder="Kilo (kg)"
-                            value={weight}
-                            onChangeText={setWeight}
-                            keyboardType="numeric"
-                            style={styles.input}
-                        />
-                        <TextInput
-                            placeholder="Uyku Düzeni"
-                            value={sleepPattern}
-                            onChangeText={setSleepPattern}
-                            style={styles.input}
-                        />
-                        <TextInput
-                            placeholder="Alerjiler"
+                            placeholder="Alerjiler (ör. Fıstık, Polen)"
                             value={allergies}
                             onChangeText={setAllergies}
                             style={styles.input}
+                            placeholderTextColor="#6b7280"
                         />
                         <TextInput
-                            placeholder="Aşılar"
+                            placeholder="Aşılar (ör. Kızamık, Tetanoz)"
                             value={vaccines}
                             onChangeText={setVaccines}
                             style={styles.input}
+                            placeholderTextColor="#6b7280"
                         />
                         <TextInput
-                            placeholder="Hastalıklar"
+                            placeholder="Geçirdiği Hastalıklar (ör. Suçiçeği, Grip)"
                             value={illnesses}
                             onChangeText={setIllnesses}
                             style={styles.input}
+                            placeholderTextColor="#6b7280"
                         />
                     </View>
 
@@ -129,9 +253,13 @@ export default function AddChild() {
 }
 
 const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: "#0f172a", padding: 20 },
+    page: {
+        flex: 1,
+        backgroundColor: "#0f172a",
+        padding: 20,
+    },
     title: {
-        fontSize: 26,
+        fontSize: 24,
         fontWeight: "800",
         textAlign: "center",
         marginBottom: 16,
@@ -143,6 +271,11 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 16,
     },
+    label: {
+        marginBottom: 8,
+        fontWeight: "bold",
+        color: "#111827",
+    },
     input: {
         borderWidth: 1,
         borderColor: "#cbd5e1",
@@ -150,12 +283,52 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginBottom: 12,
         backgroundColor: "#fff",
+        color: "#111827",
+    },
+    counterRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    counterBtn: {
+        backgroundColor: "#2563eb",
+        padding: 10,
+        borderRadius: 8,
+    },
+    counterText: {
+        color: "#fff",
+        fontSize: 20,
+        fontWeight: "bold",
     },
     submitBtn: {
         backgroundColor: "#2563eb",
         padding: 14,
         borderRadius: 12,
-        marginTop: 12,
+        marginBottom: 20,
     },
-    submitText: { textAlign: "center", fontWeight: "800", color: "#fff" },
+    submitText: {
+        textAlign: "center",
+        fontWeight: "800",
+        color: "#fff",
+    },
+    genderBtn: {
+        borderWidth: 1,
+        borderColor: "#cbd5e1",
+        borderRadius: 8,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        marginRight: 8,
+        marginBottom: 8,
+        backgroundColor: "#fff",
+    },
+    genderBtnSelected: {
+        backgroundColor: "#2563eb",
+        borderColor: "#2563eb",
+    },
+    genderBtnText: {
+        fontWeight: "600",
+        color: "#111827",
+    },
+    genderBtnTextSelected: {
+        color: "#fff",
+    },
 });
