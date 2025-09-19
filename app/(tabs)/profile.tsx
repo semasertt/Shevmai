@@ -14,7 +14,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "@/lib/supabase";
-import { getSelectedChild } from "@/services/children";
 import { router } from "expo-router";
 
 export default function ProfileScreen() {
@@ -25,22 +24,51 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         const loadChild = async () => {
-            const childId = await getSelectedChild();
-            if (!childId) return;
+            const { data: auth } = await supabase.auth.getUser();
+            if (!auth?.user) {
+                setCurrentChild(null);
+                setFormValues({});
+                return;
+            }
 
-            const { data, error } = await supabase
-                .from("children")
-                .select("*")
-                .eq("id", childId)
+            // Kullanıcının profil kaydı
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("selected_child_id")
+                .eq("id", auth.user.id)
                 .single();
 
-            if (!error && data) {
-                setCurrentChild(data);
-                setFormValues(data);
+            if (!profile?.selected_child_id) {
+                setCurrentChild(null);
+                setFormValues({});
+                return;
+            }
+
+            // Çocuğu getir
+            const { data: child } = await supabase
+                .from("children")
+                .select("*")
+                .eq("id", profile.selected_child_id)
+                .single();
+
+            if (child) {
+                setCurrentChild(child);
+                setFormValues(child);
+            } else {
+                setCurrentChild(null);
+                setFormValues({});
             }
         };
 
         loadChild();
+
+        const { data: subscription } = supabase.auth.onAuthStateChange(() => {
+            loadChild();
+        });
+
+        return () => {
+            subscription?.subscription.unsubscribe();
+        };
     }, []);
 
     const pickImage = async () => {
@@ -59,7 +87,7 @@ export default function ProfileScreen() {
                 }));
                 Alert.alert("Başarılı", "Profil resmi değiştirildi");
             }
-        } catch (error) {
+        } catch {
             Alert.alert("Hata", "Resim yüklenirken bir hata oluştu");
         }
     };
@@ -83,7 +111,7 @@ export default function ProfileScreen() {
     const formatFieldName = (field: string) => {
         const fieldNames: { [key: string]: string } = {
             name: "İsim",
-            birth_date: "Doğum Tarihi",
+            birthdate: "Doğum Tarihi",
             height: "Boy",
             weight: "Kilo",
             sleep_pattern: "Uyku Düzeni",
@@ -98,15 +126,27 @@ export default function ProfileScreen() {
         return (
             <View style={styles.page}>
                 <Text style={{ color: "#fff", textAlign: "center", marginTop: 40 }}>
-                    Yükleniyor...
+                    Henüz seçili çocuk bulunamadı.
                 </Text>
+
+                {/* Çıkış Yap butonu */}
+                <TouchableOpacity
+                    style={[styles.editBtn, { alignSelf: "center", marginTop: 20 }]}
+                    onPress={async () => {
+                        await supabase.auth.signOut();
+                        router.replace("/(auth)/sign-in");
+                    }}
+                >
+                    <Ionicons name="log-out-outline" size={18} color="#fff" />
+                    <Text style={{ color: "#fff", marginLeft: 6 }}>Çıkış Yap</Text>
+                </TouchableOpacity>
             </View>
         );
     }
 
     return (
         <ScrollView style={styles.page}>
-            {/* 📌 Header */}
+            {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Profil</Text>
                 <TouchableOpacity onPress={() => router.push("/settings" as any)}>
@@ -114,7 +154,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* 👤 Çocuk Bilgileri Kartı */}
+            {/* 👤 Çocuk Bilgileri */}
             <View style={styles.card}>
                 <View style={{ alignItems: "center" }}>
                     <TouchableOpacity onPress={pickImage}>
@@ -126,7 +166,7 @@ export default function ProfileScreen() {
                     <Text style={styles.name}>{currentChild.name}</Text>
                 </View>
 
-                {["birth_date", "height", "weight", "sleep_pattern"].map((field) => (
+                {["birthdate", "height", "weight", "sleep_pattern"].map((field) => (
                     <Text key={field} style={styles.detail}>
                         {formatFieldName(field)}: {currentChild[field] || "-"}
                     </Text>
@@ -135,7 +175,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                     style={styles.editBtn}
                     onPress={() => {
-                        setEditFields(["birth_date", "height", "weight", "sleep_pattern"]);
+                        setEditFields(["birthdate", "height", "weight", "sleep_pattern"]);
                         setEditModalVisible(true);
                     }}
                 >
@@ -144,7 +184,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* 💊 Sağlık Bilgileri Kartı */}
+            {/* 💊 Sağlık Bilgileri */}
             <View style={styles.card}>
                 <Text style={styles.sectionTitle}>💊 Sağlık Bilgileri</Text>
                 {["allergies", "vaccines", "illnesses"].map((field) => (
@@ -165,7 +205,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* 📊 Sağlık Özetim Kartı */}
+            {/* 📊 Sağlık Özetim */}
             <View style={styles.card}>
                 <Text style={styles.sectionTitle}>📊 Sağlık Özetim</Text>
                 <View style={styles.statsGrid}>
@@ -187,7 +227,7 @@ export default function ProfileScreen() {
                 </View>
             </View>
 
-            {/* Düzenleme Modal */}
+            {/* Düzenleme Modalı */}
             <Modal visible={editModalVisible} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>

@@ -41,25 +41,33 @@ export default function SignUp() {
             return Alert.alert("Uyarı", "Çocuğun adı gerekli.");
         }
 
+        // ✅ Önce mevcut oturumu kapat
+        await supabase.auth.signOut();
+
+        // ✅ Yeni kullanıcı oluştur
         const { error: sErr } = await supabase.auth.signUp({ email, password });
         if (sErr) return Alert.alert("Kayıt Hatası", sErr.message);
 
+        // ✅ Yeni kullanıcıyla giriş yap
         const { error: iErr } = await supabase.auth.signInWithPassword({ email, password });
         if (iErr) return Alert.alert("Giriş Hatası", iErr.message);
 
+        // ✅ Kullanıcı bilgisi
         const { data: u } = await supabase.auth.getUser();
         if (!u?.user) return Alert.alert("Hata", "Kullanıcı bilgisi alınamadı.");
 
+        // ✅ Profil tablosuna ekle
         const { error: pErr } = await supabase
             .from("profiles")
             .upsert({ id: u.user.id, username, email }, { onConflict: "id" });
         if (pErr) return Alert.alert("Kayıt Hatası", pErr.message);
 
+        // ✅ Çocuk bilgisi ekle
         const { data: childData, error: cErr } = await supabase
             .from("children")
             .insert({
                 name: childName,
-                birth_date: birthDate ? birthDate.toISOString().split("T")[0] : null,
+                birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
                 gender: gender,
                 height: height.toString(),
                 weight: weight.toString(),
@@ -73,12 +81,13 @@ export default function SignUp() {
 
         if (cErr) return Alert.alert("Çocuk Kaydı Hatası", cErr.message);
 
+        // ✅ Profilde seçili çocuk güncelle
         await supabase
             .from("profiles")
             .update({ selected_child_id: childData.id })
             .eq("id", u.user.id);
 
-        Alert.alert("Başarılı", "Hesap ve çocuk bilgileri oluşturuldu.");
+        Alert.alert("Başarılı", "Yeni hesap açıldı ve giriş yapıldı.");
         router.replace("/home");
     };
 

@@ -40,7 +40,7 @@ export default function SignIn() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return Alert.alert("Giriş Hatası", error.message);
 
-        router.replace("/onboarding");
+        router.replace("/home");
     };
 
     return (
