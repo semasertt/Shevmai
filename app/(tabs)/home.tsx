@@ -53,15 +53,12 @@ export default function HomeScreen() {
     const groupRecordsByCategory = (data: any[]) => {
         const grouped: { [key: string]: any[] } = {};
 
-        // Önce tüm kategorileri boş array olarak oluştur
         DEFAULT_CATEGORIES.forEach(cat => {
             grouped[cat.title] = [];
         });
 
-        // "Diğer" kategorisini de ekle
         grouped["📝 Diğer"] = [];
 
-        // Kayıtları kategorilere göre grupla
         data.forEach((rec) => {
             const categoryTitle = findCategoryTitle(rec.category);
             if (!grouped[categoryTitle]) {
@@ -84,21 +81,18 @@ export default function HomeScreen() {
         return found ? found.title : "📝 Diğer";
     };
 
-// HomeScreen.tsx - handleCategoryPress fonksiyonunu güncelle
     const handleCategoryPress = (categoryTitle: string) => {
         const categoryRecords = recordsByCategory[categoryTitle] || [];
-
-        console.log("📤 Gönderilen kayıt sayısı:", categoryRecords.length);
-        console.log("📤 Gönderilen kategori:", categoryTitle);
 
         router.push({
             pathname: "/categories/category",
             params: {
                 category: categoryTitle,
-                records: JSON.stringify(categoryRecords) // ← Kayıtları gönder
+                records: JSON.stringify(categoryRecords)
             }
         });
     };
+
     return (
         <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             {/* 📌 Kategoriler */}
@@ -111,7 +105,6 @@ export default function HomeScreen() {
                     <CardButton
                         title={item.title}
                         records={recordsByCategory[item.title] || []}
-                        // ✅ SADECE BURAYI DEĞİŞTİRDİK:
                         onPress={() => handleCategoryPress(item.title)}
                     />
                 )}
@@ -119,17 +112,7 @@ export default function HomeScreen() {
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             />
 
-            {/* 📌 Sağlık Özeti */}
-            <Text style={styles.sectionTitle}>Sağlık Özeti</Text>
-            <View style={{ paddingHorizontal: 16 }}>
-                <CardButton
-                    title="Genel Sağlık Durumu"
-                    subtitle={`Toplam ${records.length} kayıt`}
-                    variant="full"
-                />
-            </View>
-
-            {/* 📌 Takvim
+            {/* 📌 Takvim */}
             <Text style={styles.sectionTitle}>Takvim</Text>
             <View style={styles.calendarWrap}>
                 <Calendar
@@ -150,20 +133,7 @@ export default function HomeScreen() {
                     }}
                 />
             </View>
-*/}
-            {/* 📌 Son Kayıtlar */}
-            <Text style={styles.sectionTitle}>Son Kayıtlar</Text>
-            <View style={{ paddingHorizontal: 16 }}>
-                {records.slice(0, 3).map((record, index) => (
-                    <CardButton
-                        key={record.id}
-                        title={record.title}
-                        subtitle={record.details}
-                        variant="full"
-                        style={index > 0 ? { marginTop: 8 } : {}}
-                    />
-                ))}
-            </View>
+
         </ScrollView>
     );
 }
