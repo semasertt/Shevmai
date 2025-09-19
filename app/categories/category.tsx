@@ -1,5 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 import {View, Text, StyleSheet, FlatList, Image} from "react-native";
+import { VaccineScheduleView } from "@/components/VaccineScheduleView";
+import { AttackPeriodsView } from "@/components/AttackPeriodsView";
 
 export default function CategoryPage() {
     const { category, records } = useLocalSearchParams<{ category: string; records?: string }>();
@@ -11,7 +13,13 @@ export default function CategoryPage() {
     } catch (e) {
         console.error("JSON parse error:", e);
     }
-
+    // 💉 Aşı veya ⚡ Atak Dönemleri özel davranış
+    if (category === "💉 Aşı") {
+        return <VaccineScheduleView />;
+    }
+    if (category === "⚡ Atak Dönemleri") {
+        return <AttackPeriodsView />;
+    }
     return (
         <View style={styles.page}>
             <Text style={styles.title}>{category}</Text>
