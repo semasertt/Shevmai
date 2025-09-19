@@ -1,5 +1,5 @@
 // src/api/parser.ts
-import {saveHealthEvent, updateHealthEvent} from "@/src/api/saveHealthEvent";
+import {saveHealthEvent} from "@/src/api/saveHealthEvent";
 
 // src/api/parser.ts
 export async function processAIResult(aiResult: string, imageUri?: string, eventId?: string | null) {

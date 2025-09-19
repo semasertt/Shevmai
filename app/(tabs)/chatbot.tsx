@@ -18,7 +18,7 @@ import {
 } from "@/src/utils/imageUtils";
 
 // @ts-ignore
-import {askGeminiAPI, analyzeImage, checkIfRecordWorthy, checkIfAmbiguous} from "@/src/api/gemini";
+import {askGeminiAPI, analyzeImage, checkIfRecordWorthy, checkIfImageRecordWorthy} from "@/src/api/gemini";
 // @ts-ignore
 import { processAIResult } from "@/src/api/parser";
 // @ts-ignore
@@ -51,51 +51,24 @@ JSON dışında hiçbir metin yazma.
 `;
 
 const FOLLOWUP_PROMPT = `
-Sen Copi – Ebeveyn Sağlık Co-Pilotu'sun.
-Kullanıcı bir sağlık olayı kaydetti. Senin görevin:
-Aşağıda ebeveyn ile önceki konuşma geçmişi var. 
-Konuşmanın bağlamını dikkate alarak yanıt ver.
-Ana konudan sapma.
-Ve sevecen davran.
+Sen Copi – ebeveynlere destek olan sevecen bir çocuk sağlığı asistanısın.
+Kullanıcı bir sağlık olayı kaydetti. Onunla sohbet ederken doktor gibi ama samimi ve anlaşılır konuş.
 
 Kurallar:
-1. Doktor gibi davran.
-2. Önce olayı kısa özetle.
-3. Ardından olası nedeni veya ön tanıyı yaz ("şundan kaynaklanıyor olabilir", "buna bağlı olabilir" gibi).
-4. Risk seviyesini belirt (düşük/orta/yüksek).
-5. En fazla 1 tane eksik bilgiyi tamamlayıcı kısa soru sor.
-6. Kullanıcı "yok", "hayır", "evet", "başka belirtim yok" gibi cevap verirse, bunu son soruna yanıt olarak değerlendir.
-7. JSON dönme, sadece düz metin dön.
+1. Önce olayı ebeveynin anlayacağı şekilde kısaca özetle.
+2. Sonra olası nedeni veya açıklamayı yaz ("şundan kaynaklanıyor olabilir", "buna bağlı olabilir" gibi).
+3. Risk seviyesini belirt ama korkutma; "endişe etmeyin, şimdilik ..." gibi doğal cümleler kullan.
+4. En fazla 1 tane tamamlayıcı soru sor ama kısa, günlük konuşma dilinde olsun.
+5. Gereksiz resmi ifadelerden kaçın. "Tahmin", "Özet", "Risk" gibi başlıklar yazma, doğal bir akış olsun.
+6. JSON dönme, sadece düz metin dön.
+7. Samimi ve sakin ol, bir doktorun ebeveyni bilgilendirmesi gibi konuş.
 
-Kategoriye göre soru kuralları:
-- "İlaç" → İlacın adı, dozu veya nedenini sor.
-- "Hastalık/belirti" → Süre, şiddet veya ek semptomları sor.
-- "Tahlil sonucu" → Hangi test yapıldığı veya değerin kaç olduğu sor.
-- "Boy/Kilo" → Çocuğun yaşı veya son ölçüm tarihi sor.
-- "Uyku" → Kaç saattir devam ettiği veya uyku düzeni sor.
-- "Beslenme" → Günlük öğün sayısı veya çeşitlilik sor.
-- "Aşı" → Hangi aşı yapıldığı veya tarihi sor.
-- "Acil durum" → Şikayetin süresi veya şiddeti sor.
-
-Yanıt formatı:
-1. Tahmin: olası neden / ön tanı
-2. Risk: doğal ifadeyle durumun ciddiyeti
-3. Soru: sadece 1 adet ek bilgi sorusu
-
-Örnek:
+Örnekler:
 Ebeveyn: "Çocuğum öksürüyor."
-Copi: 
-Özet: Çocuğunuzda öksürük şikayeti var.
-Tahmin: Bu durum enfeksiyon veya alerji kaynaklı olabilir.
-Risk: orta
-Soru: Ne zamandır öksürüyor?
-
+Copi: "Anladım, öksürüğü var. Bu çoğunlukla enfeksiyon ya da alerjiden olabilir. Çok ciddi görünmese de dikkat etmek iyi olur. Kaç gündür devam ediyor?"
+cevapta emojide kullan.
 Ebeveyn: "Parasetamol 5 ml verdim."
-Copi:
-Özet: Parasetamol verilmiş.
-Tahmin: Genellikle ateş veya ağrı için kullanılır, doz çocuğun kilosuna göre uygunluğu kontrol edilmeli.
-Risk: orta
-Soru: Çocuğun kilosu kaç kg ve parasetamolü neden verdiniz?
+Copi: "Parasetamol vermişsiniz, genelde ateş ya da ağrı için kullanılır. Dozun çocuğun kilosuna uygun olup olmadığını bilmek önemli. Kaç kilo şu anda ve neden verdiniz?"
 `;
 
 
@@ -147,6 +120,10 @@ export default function Chatbot() {
         setMessages((prev) => [...prev, newMessage]);
         setPrompt("");
         setLoading(true);
+// 0. Konuşma geçmişini hazırla
+        const conversationHistory = messages
+            .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
+            .join("\n");
 
         try {
             console.log("📝 Kullanıcı mesajı:", userMessage);
@@ -154,8 +131,12 @@ export default function Chatbot() {
             // 1. Eğer önceki bir soruya cevap veriyorsa, FOLLOWUP_PROMPT kullan
             if (pendingQuestion && pendingDetail) {
                 console.log("🔄 Önceki soruya cevap (FOLLOWUP_PROMPT)");
-                const aiResult = await askGeminiAPI(userMessage, FOLLOWUP_PROMPT);
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
+// Belirsiz → FOLLOWUP
+                const followup = await askGeminiAPI(
+                    `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
+                    FOLLOWUP_PROMPT
+                );
+                setMessages((prev) => [...prev, { role: "bot", type: "text", text: followup }]);
                 return;
             }
 
@@ -164,16 +145,24 @@ export default function Chatbot() {
             console.log("📋 Kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                console.log("❌ Kayıt değil, normal sohbet (FOLLOWUP_PROMPT)");
-                const aiResult = await askGeminiAPI(userMessage, FOLLOWUP_PROMPT);
+                // ❌ Sadece sohbet
+                const aiResult = await askGeminiAPI(
+                    `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
+                    "Sadece sohbet et, kısa cevap ver."
+                );
                 setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
                 return;
             }
 
             // 3. YENİ KAYIT - BASE_PROMPT kullan
-            console.log("✅ Yeni kayıt oluşturuluyor (BASE_PROMPT)");
-            const aiResult = await askGeminiAPI(userMessage, BASE_PROMPT);
-
+            const aiResult = await askGeminiAPI(
+                `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
+                BASE_PROMPT
+            );
+            const aiAnswer = await askGeminiAPI(
+                `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
+                FOLLOWUP_PROMPT
+            );
             // 4. JSON'u işle ve DB'ye kaydet
             const result = await processAIResult(aiResult, undefined, activeEventId);
 
@@ -181,13 +170,7 @@ export default function Chatbot() {
                 setActiveEventId(result.eventId);
             }
 
-            // 5. Kullanıcıya formatlanmış yanıtı göster
-            if (result.displayText) {
-                setMessages((prev) => [
-                    ...prev,
-                    { role: "bot", type: "text", text: result.displayText },
-                ]);
-            }
+            setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiAnswer }]);
 
             // 6. Eksik bilgi varsa, soru sor ve FOLLOWUP moduna geç
             if (result.questions && result.questions.length > 0) {
@@ -213,6 +196,9 @@ export default function Chatbot() {
 
     // 🔹 Fotoğraf (galeri) - DÜZELTİLMİŞ
     const handleGallery = async () => {
+        const conversationHistory = messages
+            .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
+            .join("\n");
         try {
             const img = await pickImageFromGallery();
             if (!img) return;
@@ -221,38 +207,57 @@ export default function Chatbot() {
             setMessages((prev) => [...prev, newMessage]);
             setLoading(true);
 
-            // Görseli analiz et - BASE_PROMPT kullan
-            const aiResult = await analyzeImage(img.base64!, BASE_PROMPT);
-            console.log("📸 Görsel analiz sonucu:", aiResult);
-
-            // Kayıt değer mi kontrol et
-            const shouldSave = await checkIfRecordWorthy(aiResult);
+            // 1. Önce kayıt değer mi kontrol et (görselin kendisini analiz ederek)
+            const shouldSave = await checkIfImageRecordWorthy(img.base64!);
             console.log("📋 Görsel kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // Kayıt değilse, direkt göster
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
+                // ❌ Sadece sohbet - görseli basitçe yorumla
+                const aiAnswer = await analyzeImage(
+                    img.base64!,
+                    `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
+                    "Bu görseli kısa bir şekilde yorumla, sadece sohbet et."
+                );
+                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiAnswer }]);
                 return;
             }
 
-            // Kayıt değerse, işle ve DB'ye kaydet
-            const result = await processAIResult(aiResult, img.uri);
-            console.log("💾 Görsel kayıt sonucu:", result);
+            // 2. ✅ Kayıt değerse, BASE_PROMPT ile analiz et
+            const aiResult = await analyzeImage(
+                img.base64!,
+                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
+                BASE_PROMPT
+            );
+            console.log("📸 Görsel analiz sonucu:", aiResult);
 
-            if (result.displayText) {
-                setMessages((prev) => [
-                    ...prev,
-                    { role: "bot", type: "text", text: result.displayText },
-                ]);
+            // 3. Kullanıcıya yanıt ver (FOLLOWUP_PROMPT ile)
+            const aiAnswer = await analyzeImage(
+                img.base64!,
+                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
+                FOLLOWUP_PROMPT
+            );
+
+            // 4. JSON'u işle ve DB'ye kaydet
+            const result = await processAIResult(aiResult, img.uri);
+            console.log("kaydedildi");
+
+            if (result.eventId && !activeEventId) {
+                setActiveEventId(result.eventId);
             }
 
-            // Eksik bilgi sorusu varsa
+            setMessages((prev) => [
+                ...prev,
+                { role: "bot", type: "text", text: aiAnswer },
+            ]);
+
+            // 5. Eksik bilgi sorusu varsa
             if (result.questions && result.questions.length > 0) {
                 setMessages((prev) => [
                     ...prev,
                     { role: "bot", type: "text", text: result.questions[0] },
                 ]);
                 setPendingDetail(result.eventId || activeEventId);
+                setPendingQuestion(true);
             }
 
         } catch (err) {
@@ -266,8 +271,12 @@ export default function Chatbot() {
         }
     };
 
+
 // 🔹 Fotoğraf (kamera) - DÜZELTİLMİŞ
     const handleCamera = async () => {
+        const conversationHistory = messages
+            .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
+            .join("\n");
         try {
             const img = await takePhotoWithCamera();
             if (!img) return;
@@ -276,45 +285,64 @@ export default function Chatbot() {
             setMessages((prev) => [...prev, newMessage]);
             setLoading(true);
 
-            // Görseli analiz et - BASE_PROMPT kullan
-            const aiResult = await analyzeImage(img.base64!, BASE_PROMPT);
-            console.log("📸 Kamera analiz sonucu:", aiResult);
-
-            // Kayıt değer mi kontrol et
-            const shouldSave = await checkIfRecordWorthy(aiResult);
-            console.log("📋 Kamera kayıt değer mi:", shouldSave);
+            // 1. Önce kayıt değer mi kontrol et (görselin kendisini analiz ederek)
+            const shouldSave = await checkIfImageRecordWorthy(img.base64!);
+            console.log("📋 Görsel kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // Kayıt değilse, direkt göster
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
+                // ❌ Sadece sohbet - görseli basitçe yorumla
+                const aiAnswer = await analyzeImage(
+                    img.base64!,
+                    `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
+                    "Bu görseli kısa bir şekilde yorumla, sadece sohbet et."
+                );
+                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiAnswer }]);
                 return;
             }
 
-            // Kayıt değerse, işle ve DB'ye kaydet
-            const result = await processAIResult(aiResult, img.uri);
-            console.log("💾 Kamera kayıt sonucu:", result);
+            // 2. ✅ Kayıt değerse, BASE_PROMPT ile analiz et
+            const aiResult = await analyzeImage(
+                img.base64!,
+                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
+                BASE_PROMPT
+            );
+            console.log("📸 Görsel analiz sonucu:", aiResult);
 
-            if (result.displayText) {
-                setMessages((prev) => [
-                    ...prev,
-                    { role: "bot", type: "text", text: result.displayText },
-                ]);
+            // 3. Kullanıcıya yanıt ver (FOLLOWUP_PROMPT ile)
+            const aiAnswer = await analyzeImage(
+                img.base64!,
+                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
+                FOLLOWUP_PROMPT
+            );
+
+            // 4. JSON'u işle ve DB'ye kaydet
+            const result = await processAIResult(aiResult, img.uri);
+            console.log("kaydedildi");
+
+            if (result.eventId && !activeEventId) {
+                setActiveEventId(result.eventId);
             }
 
-            // Eksik bilgi sorusu varsa
+            setMessages((prev) => [
+                ...prev,
+                { role: "bot", type: "text", text: aiAnswer },
+            ]);
+
+            // 5. Eksik bilgi sorusu varsa
             if (result.questions && result.questions.length > 0) {
                 setMessages((prev) => [
                     ...prev,
                     { role: "bot", type: "text", text: result.questions[0] },
                 ]);
                 setPendingDetail(result.eventId || activeEventId);
+                setPendingQuestion(true);
             }
 
         } catch (err) {
-            console.error("❌ handleCamera error:", err);
+            console.error("❌ handlecamera error:", err);
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", type: "text", text: "⚠️ Kamera hatası oluştu." },
+                { role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu." },
             ]);
         } finally {
             setLoading(false);
