@@ -11,17 +11,14 @@ import { supabase } from "@/lib/supabase";
 import { getSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
 import { useRouter } from "expo-router";
-
 const DEFAULT_CATEGORIES = [
-    { id: "medicine", title: "💊 İlaçlar" },
-    { id: "fever", title: "🌡️ Ateş" },
-    { id: "measurement", title: "📏 Boy/Kilo" },
-    { id: "test", title: "🧪 Tahlil Sonuçları" },
-    { id: "symptom", title: "🤒 Hastalık/Belirti" },
+    { id: "disease", title: "🤒 Hastalık" },
+    { id: "vaccine", title: "💉 Aşı" },
+    { id: "symptom", title: "🌡️ Semptom" },
     { id: "nutrition", title: "🍎 Beslenme" },
     { id: "sleep", title: "😴 Uyku" },
-    { id: "vaccine", title: "💉 Aşılar" },
-    { id: "emergency", title: "🚨 Acil Durum" },
+    { id: "test", title: "🧪 Tahlil Sonuçları" },
+    { id: "attack", title: "⚡ Atak Dönemleri" },
     { id: "other", title: "📝 Diğer" },
 ];
 

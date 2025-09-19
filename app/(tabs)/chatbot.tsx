@@ -27,51 +27,9 @@ import ChatMessage from "@/components/ui/ChatMessage";
 import Sidebar from "@/components/ui/Sidebar";
 import {supabase} from "@/lib/supabase";
 import {addFollowUpToEvent} from "@/src/api/saveHealthEvent";
+import {getCurrentChildWithDetails} from "@/services/children";
+import {makeBasePrompt, makeFollowupPrompt} from "@/src/prompts";
 
-const BASE_PROMPT = `
-Sen ebeveynlere destek olan sevecen bir çocuk sağlığı asistanısın
-Kullanıcı bir sağlık olayı (ilaç, ateş, boy-kilo, tahlil, beslenme vb.) girer.
-Senin görevin:
-
-1. Olayı kategorileştir.
-3. İlaç ise dozu yaş/kilo ile kıyasla, doğru mu değil mi kontrol et.
-Yanıtın mutlaka geçerli JSON formatında olsun. JSON dışında hiçbir şey yazma.
-JSON dışında hiçbir metin yazma.
-
-{
-mutlaka bu alanları döndür
- {
-  "category": "Hastalık" | "Aşı" | "Semptom" | "Beslenme" | "Uyku" | "Tahlil Sonuçları" | "Atak Dönemleri" | "Diğer",
-  "title": "Kısa başlık",
-  "details": "Geçmiş sohbetlere bakarak olayın daha ayrıntılı açıklaması",
-  "summary": "Geçmiş sohbetlere bakarak durumun kısa özeti",
-  "analysis": "Eksik bilgiler ve mevcut verilere göre yorum",
-  "risk": "low" | "medium" | "high" olarak belirle,
-  "advice": "Ebeveyne pratik tavsiye",
-  "duration": "Süre bilgisi (örn: '2 gün', '5 saat'). Eğer süre belirtilmediyse 'null' yaz."
-}
-`;
-
-const FOLLOWUP_PROMPT = `
-Sen ebeveynlere destek olan sevecen bir çocuk sağlığı asistanısın.
-Kullanıcı bir sağlık olayı kaydetti. Onunla sohbet ederken doktor gibi ama samimi ve anlaşılır konuş.
-
-Kurallar:
-1. Önce olayı ebeveynin anlayacağı şekilde kısaca özetle.
-2. Sonra olası nedeni veya açıklamayı yaz ("şundan kaynaklanıyor olabilir", "buna bağlı olabilir" gibi).
-3. Risk seviyesini belirt ama korkutma; "endişe etmeyin, şimdilik ..." gibi doğal cümleler kullan.
-4. En fazla 1 tane tamamlayıcı soru sor ama kısa, günlük konuşma dilinde olsun.
-5. Gereksiz resmi ifadelerden kaçın. "Tahmin", "Özet", "Risk" gibi başlıklar yazma, doğal bir akış olsun.
-6. JSON dönme, sadece düz metin dön.
-7. Samimi ve sakin ol, bir doktorun ebeveyni bilgilendirmesi gibi konuş.
-
-Örnekler:
-Ebeveyn: "Çocuğum öksürüyor."
-Copi: "Anladım, öksürüğü var. Bu çoğunlukla enfeksiyon ya da alerjiden olabilir. Çok ciddi görünmese de dikkat etmek iyi olur. Kaç gündür devam ediyor?"
-cevapta emojide kullan.
-Ebeveyn: "Parasetamol 5 ml verdim."
-Copi: "Parasetamol vermişsiniz, genelde ateş ya da ağrı için kullanılır. Dozun çocuğun kilosuna uygun olup olmadığını bilmek önemli. Kaç kilo şu anda ve neden verdiniz?"
-`;
 
 
 export default function Chatbot() {
@@ -116,6 +74,14 @@ export default function Chatbot() {
     // YENİ askGemini fonksiyonu
     const askGemini = async () => {
         if (!prompt.trim()) return;
+        const child = await getCurrentChildWithDetails();
+        const childContext = child ? `
+- İsim: ${child.name}
+- Doğum tarihi: ${child.birthdate || "bilinmiyor"}
+- Cinsiyet: ${child.gender || "bilinmiyor"}
+- Boy: ${child.height || "bilinmiyor"}
+- Kilo: ${child.weight || "bilinmiyor"}
+` : "Çocuk bilgisi seçilmedi.";
 
         const userMessage = prompt.trim();
         const newMessage = { role: "user", type: "text", text: userMessage };
@@ -136,7 +102,7 @@ export default function Chatbot() {
 // Belirsiz → FOLLOWUP
                 const followup = await askGeminiAPI(
                     `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
-                    FOLLOWUP_PROMPT
+                    makeFollowupPrompt(childContext)
                 );
 
 
@@ -162,11 +128,12 @@ export default function Chatbot() {
             // 3. YENİ KAYIT - BASE_PROMPT kullan
             const aiResult = await askGeminiAPI(
                 `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
-                BASE_PROMPT
+                makeBasePrompt(childContext)
             );
+
             const aiAnswer = await askGeminiAPI(
                 `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
-                FOLLOWUP_PROMPT
+                makeFollowupPrompt(childContext)
             );
             // 4. JSON'u işle ve DB'ye kaydet
             const result = await processAIResult(aiResult, undefined, activeEventId);
@@ -201,6 +168,14 @@ export default function Chatbot() {
 
     // 🔹 Fotoğraf (galeri) - GÜNCEL
     const handleGallery = async () => {
+        const child = await getCurrentChildWithDetails();
+        const childContext = child ? `
+- İsim: ${child.name}
+- Doğum tarihi: ${child.birthdate || "bilinmiyor"}
+- Cinsiyet: ${child.gender || "bilinmiyor"}
+- Boy: ${child.height || "bilinmiyor"}
+- Kilo: ${child.weight || "bilinmiyor"}
+` : "Çocuk bilgisi seçilmedi.";
         const conversationHistory = messages
             .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
             .join("\n");
@@ -231,16 +206,16 @@ export default function Chatbot() {
             // 2. ✅ Kayıt değerse, BASE_PROMPT ile analiz et
             const aiResult = await analyzeImage(
                 img.base64!,
-                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
-                BASE_PROMPT
+                `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
+                makeBasePrompt(childContext)
             );
 
-            // 3. Kullanıcıya yanıt ver (FOLLOWUP_PROMPT ile)
             const aiAnswer = await analyzeImage(
                 img.base64!,
-                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
-                FOLLOWUP_PROMPT
+                `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
+                makeFollowupPrompt(childContext)
             );
+
 
             // 4. JSON'u işle ve DB'ye kaydet (aktif kayıt varsa append edecek!)
             const result = await processAIResult(
@@ -281,6 +256,14 @@ export default function Chatbot() {
     };
 // 🔹 Fotoğraf (kamera) - GÜNCEL
     const handleCamera = async () => {
+        const child = await getCurrentChildWithDetails();
+        const childContext = child ? `
+- İsim: ${child.name}
+- Doğum tarihi: ${child.birthdate || "bilinmiyor"}
+- Cinsiyet: ${child.gender || "bilinmiyor"}
+- Boy: ${child.height || "bilinmiyor"}
+- Kilo: ${child.weight || "bilinmiyor"}
+` : "Çocuk bilgisi seçilmedi.";
         const conversationHistory = messages
             .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
             .join("\n");
@@ -311,16 +294,16 @@ export default function Chatbot() {
             // 2. ✅ Kayıt değerse, BASE_PROMPT ile analiz et
             const aiResult = await analyzeImage(
                 img.base64!,
-                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
-                BASE_PROMPT
+                `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
+                makeBasePrompt(childContext)
             );
 
-            // 3. Kullanıcıya yanıt ver (FOLLOWUP_PROMPT ile)
             const aiAnswer = await analyzeImage(
                 img.base64!,
-                `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
-                FOLLOWUP_PROMPT
+                `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
+                makeFollowupPrompt(childContext)
             );
+
 
             // 4. JSON'u işle ve DB'ye kaydet (aktif kayıt varsa append edecek!)
             const result = await processAIResult(
