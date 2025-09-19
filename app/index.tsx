@@ -17,6 +17,7 @@ export default function Index() {
     }, []);
 
     if (!ready) return null;
-    return <Redirect href={loggedIn ? "/onboarding" : "/(auth)/sign-in"} />;
+    return <Redirect href={loggedIn ? "/(tabs)/home" : "/(auth)/sign-in"} />;
+
 
 }
