@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import {View, Text, StyleSheet, FlatList, Image} from "react-native";
+import { View, Text, StyleSheet, FlatList, Image, ScrollView } from "react-native";
 import { VaccineScheduleView } from "@/components/VaccineScheduleView";
 import { AttackPeriodsView } from "@/components/AttackPeriodsView";
 
@@ -13,6 +13,7 @@ export default function CategoryPage() {
     } catch (e) {
         console.error("JSON parse error:", e);
     }
+
     // 💉 Aşı veya ⚡ Atak Dönemleri özel davranış
     if (category === "💉 Aşı") {
         return <VaccineScheduleView />;
@@ -20,8 +21,9 @@ export default function CategoryPage() {
     if (category === "⚡ Atak Dönemleri") {
         return <AttackPeriodsView />;
     }
+
     return (
-        <View style={styles.page}>
+        <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             <Text style={styles.title}>{category}</Text>
 
             {parsedRecords.length > 0 ? (
@@ -33,7 +35,6 @@ export default function CategoryPage() {
                             <Text style={styles.recordTitle}>{item.title}</Text>
                             {item.advice ? (
                                 <Text style={styles.recordText}>{item.advice}</Text>
-
                             ) : null}
                             {item.image_url ? (
                                 <Image
@@ -48,25 +49,46 @@ export default function CategoryPage() {
             ) : (
                 <Text style={styles.empty}>Henüz kayıt yok</Text>
             )}
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    page: { flex: 1, padding: 16, backgroundColor: "#fff" },
-    title: { fontSize: 22, fontWeight: "700", marginBottom: 16 },
-    recordItem: {
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderColor: "#eee",
+    page: { flex: 1, backgroundColor: "#0f172a" }, // ✅ HomeScreen ile aynı koyu arka plan
+    title: {
+        fontSize: 24,              // 🔹 Daha büyük
+        fontWeight: "800",         // 🔹 Daha kalın
+        marginBottom: 20,
+        color: "#facc15",          // 🔹 Sarı (arka planda çok dikkat çeker)
+        textAlign: "center"        // 🔹 Ortalayıp daha güçlü görünüm
     },
-    recordTitle: { fontSize: 16, fontWeight: "600" },
-    recordText: { fontSize: 14, color: "#444", marginTop: 4 },
-    empty: { textAlign: "center", marginTop: 20, color: "#888" },
+
+    recordItem: {
+        backgroundColor: "#1e293b", // ✅ koyu kart
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+        marginHorizontal: 16,
+    },
+    recordTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+        color: "#fff"
+    },
+    recordText: {
+        fontSize: 14,
+        color: "#cbd5e1",
+        marginTop: 6
+    },
+    empty: {
+        textAlign: "center",
+        marginTop: 20,
+        color: "#94a3b8"
+    },
     recordImage: {
         width: "100%",
         height: 180,
         borderRadius: 10,
-        marginTop: 8,
+        marginTop: 10,
     },
 });
