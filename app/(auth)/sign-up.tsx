@@ -10,11 +10,11 @@ import {
     Platform,
     Keyboard,
     ScrollView,
-    StyleSheet,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { commonStyles } from "app/styles/common";
 
 export default function SignUp() {
     const [username, setUsername] = useState("");
@@ -73,7 +73,7 @@ export default function SignUp() {
             .insert({
                 parent_id: user.id,
                 name: childName,
-                birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null, // ✅ doğru kolon
+                birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
                 gender,
                 height: height.toString(),
                 weight: weight.toString(),
@@ -88,7 +88,10 @@ export default function SignUp() {
         if (cErr) return Alert.alert("Çocuk Kaydı Hatası", cErr.message);
 
         // 📌 Aktif çocuk id güncelle
-        await supabase.from("profiles").update({ selected_child_id: childData.id }).eq("id", user.id);
+        await supabase
+            .from("profiles")
+            .update({ selected_child_id: childData.id })
+            .eq("id", user.id);
 
         Alert.alert("Başarılı", "Hesap ve çocuk bilgileri oluşturuldu.");
         router.replace("/(tabs)/home");
@@ -97,19 +100,19 @@ export default function SignUp() {
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.page}
+            style={commonStyles.page}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}>
-                    <Text style={styles.title}>Kayıt Ol</Text>
+                <ScrollView contentContainerStyle={commonStyles.scrollContainer}>
+                    <Text style={commonStyles.authTitle}>Kayıt Ol</Text>
 
                     {/* Kullanıcı bilgileri */}
-                    <View style={styles.card}>
+                    <View style={commonStyles.card}>
                         <TextInput
                             placeholder="Kullanıcı adı"
                             value={username}
                             onChangeText={setUsername}
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
                         <TextInput
@@ -117,7 +120,7 @@ export default function SignUp() {
                             value={email}
                             onChangeText={setEmail}
                             keyboardType="email-address"
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
                         <TextInput
@@ -125,27 +128,32 @@ export default function SignUp() {
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
                     </View>
 
-                    <Text style={styles.sectionTitle}>Çocuk Bilgileri</Text>
+                    <Text style={commonStyles.sectionTitle}>Çocuk Bilgileri</Text>
 
                     {/* Adı + Doğum Tarihi */}
-                    <View style={styles.card}>
+                    <View style={commonStyles.card}>
                         <TextInput
                             placeholder="Adı"
                             value={childName}
                             onChangeText={setChildName}
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
 
-                        <Text style={styles.label}>Doğum Tarihi</Text>
-                        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+                        <Text style={commonStyles.label}>Doğum Tarihi</Text>
+                        <TouchableOpacity
+                            onPress={() => setShowDatePicker(true)}
+                            style={commonStyles.input}
+                        >
                             <Text style={{ color: birthDate ? "#111827" : "#6b7280" }}>
-                                {birthDate ? birthDate.toLocaleDateString("tr-TR") : "Tarih Seçin"}
+                                {birthDate
+                                    ? birthDate.toLocaleDateString("tr-TR")
+                                    : "Tarih Seçin"}
                             </Text>
                         </TouchableOpacity>
                         {showDatePicker && (
@@ -162,19 +170,22 @@ export default function SignUp() {
                     </View>
 
                     {/* Cinsiyet */}
-                    <View style={styles.card}>
-                        <Text style={styles.label}>Cinsiyet</Text>
+                    <View style={commonStyles.card}>
+                        <Text style={commonStyles.label}>Cinsiyet</Text>
                         <View style={{ flexDirection: "row", marginBottom: 4 }}>
                             {["Erkek", "Kız"].map((option) => (
                                 <TouchableOpacity
                                     key={option}
                                     onPress={() => setGender(option)}
-                                    style={[styles.genderBtn, gender === option && styles.genderBtnSelected]}
+                                    style={[
+                                        commonStyles.genderBtn,
+                                        gender === option && commonStyles.genderBtnSelected,
+                                    ]}
                                 >
                                     <Text
                                         style={[
-                                            styles.genderBtnText,
-                                            gender === option && styles.genderBtnTextSelected,
+                                            commonStyles.genderBtnText,
+                                            gender === option && commonStyles.genderBtnTextSelected,
                                         ]}
                                     >
                                         {option}
@@ -185,14 +196,14 @@ export default function SignUp() {
                     </View>
 
                     {/* Boy */}
-                    <View style={styles.card}>
-                        <Text style={styles.label}>Boy (cm)</Text>
-                        <View style={styles.counterRow}>
+                    <View style={commonStyles.card}>
+                        <Text style={commonStyles.label}>Boy (cm)</Text>
+                        <View style={commonStyles.counterRow}>
                             <TouchableOpacity
                                 onPress={() => setHeight((prev) => Math.max(30, prev - 1))}
-                                style={styles.counterBtn}
+                                style={commonStyles.counterBtn}
                             >
-                                <Text style={styles.counterText}>-</Text>
+                                <Text style={commonStyles.counterText}>-</Text>
                             </TouchableOpacity>
 
                             <TextInput
@@ -202,27 +213,30 @@ export default function SignUp() {
                                     if (!isNaN(num)) setHeight(num);
                                 }}
                                 keyboardType="numeric"
-                                style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
+                                style={[
+                                    commonStyles.input,
+                                    { flex: 1, marginHorizontal: 8, textAlign: "center" },
+                                ]}
                             />
 
                             <TouchableOpacity
                                 onPress={() => setHeight((prev) => Math.min(250, prev + 1))}
-                                style={styles.counterBtn}
+                                style={commonStyles.counterBtn}
                             >
-                                <Text style={styles.counterText}>+</Text>
+                                <Text style={commonStyles.counterText}>+</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
 
                     {/* Kilo */}
-                    <View style={styles.card}>
-                        <Text style={styles.label}>Kilo (kg)</Text>
-                        <View style={styles.counterRow}>
+                    <View style={commonStyles.card}>
+                        <Text style={commonStyles.label}>Kilo (kg)</Text>
+                        <View style={commonStyles.counterRow}>
                             <TouchableOpacity
                                 onPress={() => setWeight((prev) => Math.max(1, prev - 1))}
-                                style={styles.counterBtn}
+                                style={commonStyles.counterBtn}
                             >
-                                <Text style={styles.counterText}>-</Text>
+                                <Text style={commonStyles.counterText}>-</Text>
                             </TouchableOpacity>
 
                             <TextInput
@@ -232,71 +246,80 @@ export default function SignUp() {
                                     if (!isNaN(num)) setWeight(num);
                                 }}
                                 keyboardType="numeric"
-                                style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
+                                style={[
+                                    commonStyles.input,
+                                    { flex: 1, marginHorizontal: 8, textAlign: "center" },
+                                ]}
                             />
 
                             <TouchableOpacity
                                 onPress={() => setWeight((prev) => Math.min(200, prev + 1))}
-                                style={styles.counterBtn}
+                                style={commonStyles.counterBtn}
                             >
-                                <Text style={styles.counterText}>+</Text>
+                                <Text style={commonStyles.counterText}>+</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
 
                     {/* Uyku Düzeni */}
-                    <View style={styles.card}>
-                        <Text style={styles.label}>Uyku Düzeni</Text>
+                    <View style={commonStyles.card}>
+                        <Text style={commonStyles.label}>Uyku Düzeni</Text>
                         <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map((option) => (
-                                <TouchableOpacity
-                                    key={option}
-                                    onPress={() => setSleepPattern(option)}
-                                    style={[styles.genderBtn, sleepPattern === option && styles.genderBtnSelected]}
-                                >
-                                    <Text
+                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map(
+                                (option) => (
+                                    <TouchableOpacity
+                                        key={option}
+                                        onPress={() => setSleepPattern(option)}
                                         style={[
-                                            styles.genderBtnText,
-                                            sleepPattern === option && styles.genderBtnTextSelected,
+                                            commonStyles.genderBtn,
+                                            sleepPattern === option && commonStyles.genderBtnSelected,
                                         ]}
                                     >
-                                        {option}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                                        <Text
+                                            style={[
+                                                commonStyles.genderBtnText,
+                                                sleepPattern === option &&
+                                                commonStyles.genderBtnTextSelected,
+                                            ]}
+                                        >
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )
+                            )}
                         </View>
                     </View>
 
                     {/* Diğer Alanlar */}
-                    <View style={styles.card}>
+                    <View style={commonStyles.card}>
                         <TextInput
                             placeholder="Alerjiler (ör. Fıstık, Polen)"
                             value={allergies}
                             onChangeText={setAllergies}
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
                         <TextInput
                             placeholder="Aşılar (ör. Kızamık, Tetanoz)"
                             value={vaccines}
                             onChangeText={setVaccines}
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
                         <TextInput
                             placeholder="Geçirdiği Hastalıklar (ör. Suçiçeği, Grip)"
                             value={illnesses}
                             onChangeText={setIllnesses}
-                            style={styles.input}
+                            style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
                     </View>
 
-                    <TouchableOpacity onPress={onSignUp} style={styles.submitBtn}>
-                        <Text style={styles.submitText}>Kayıt Ol</Text>
+                    <TouchableOpacity onPress={onSignUp} style={commonStyles.submitBtn}>
+                        <Text style={commonStyles.submitText}>Kayıt Ol</Text>
                     </TouchableOpacity>
 
-                    <Text style={{ textAlign: "center", color: "#fff" }}>
+                    <Text style={commonStyles.authLink}>
                         Zaten hesabın var mı? <Link href="/(auth)/sign-in">Giriş yap</Link>
                     </Text>
                 </ScrollView>
@@ -304,21 +327,3 @@ export default function SignUp() {
         </KeyboardAvoidingView>
     );
 }
-
-const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: "#0f172a", padding: 20 },
-    title: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 16, color: "#fff" },
-    card: { backgroundColor: "#f8fafc", borderRadius: 12, padding: 12, marginBottom: 16 },
-    input: { borderWidth: 1, borderColor: "#cbd5e1", padding: 12, borderRadius: 10, marginBottom: 12, backgroundColor: "#fff", color: "#111827" },
-    sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10, color: "#fff" },
-    label: { marginBottom: 8, fontWeight: "bold", color: "#111827" },
-    counterRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-    counterBtn: { backgroundColor: "#2563eb", padding: 10, borderRadius: 8 },
-    counterText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
-    submitBtn: { backgroundColor: "#2563eb", padding: 14, borderRadius: 12, marginBottom: 20 },
-    submitText: { textAlign: "center", fontWeight: "800", color: "#fff" },
-    genderBtn: { borderWidth: 1, borderColor: "#cbd5e1", borderRadius: 8, paddingVertical: 10, paddingHorizontal: 20, marginRight: 8, marginBottom: 8, backgroundColor: "#fff" },
-    genderBtnSelected: { backgroundColor: "#2563eb", borderColor: "#2563eb" },
-    genderBtnText: { fontWeight: "600", color: "#111827" },
-    genderBtnTextSelected: { color: "#fff" },
-});

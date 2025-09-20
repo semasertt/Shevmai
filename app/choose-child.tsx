@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
+import {commonStyles} from "@/app/styles/common";
 
 export default function ChooseChildScreen() {
     const [children, setChildren] = useState<any[]>([]);
@@ -57,19 +58,19 @@ export default function ChooseChildScreen() {
     };
 
     return (
-        <View style={styles.page}>
-            <Text style={styles.title}>Çocuğunu Seç</Text>
+        <View style={commonStyles.page}>
+            <Text style={commonStyles.title}>Çocuğunu Seç</Text>
 
             <FlatList
                 data={children}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <TouchableOpacity
-                        style={styles.childCard}
+                        style={commonStyles.childCard}
                         onPress={() => selectChild(item.id)}
                     >
-                        <Text style={styles.childName}>{item.name}</Text>
-                        <Text style={styles.childDetail}>{item.birthdate}</Text>
+                        <Text style={commonStyles.childName}>{item.name}</Text>
+                        <Text style={commonStyles.childDetail}>{item.birthdate}</Text>
                     </TouchableOpacity>
                 )}
                 ListEmptyComponent={
@@ -82,15 +83,5 @@ export default function ChooseChildScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: "#0f172a", padding: 16 },
-    title: { fontSize: 22, color: "#fff", fontWeight: "700", marginBottom: 16 },
-    childCard: {
-        padding: 16,
-        borderRadius: 10,
-        backgroundColor: "#1e293b",
-        marginBottom: 10,
-    },
-    childName: { color: "#fff", fontSize: 16, fontWeight: "600" },
-    childDetail: { color: "#cbd5e1", fontSize: 14, marginTop: 4 },
-});
+
+

@@ -6,16 +6,17 @@ import {
     TouchableOpacity,
     Alert,
     KeyboardAvoidingView,
-    TouchableWithoutFeedback, Platform, Keyboard
+    TouchableWithoutFeedback,
+    Platform,
+    Keyboard,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { commonStyles } from "app/styles/common";
 
 async function resolveEmail(identity: string): Promise<string | null> {
-    // identity '@' içeriyorsa direkt email kabul et
     if (identity.includes("@")) return identity;
 
-    // değilse username'den email'i bul
     const { data, error } = await supabase
         .from("profiles")
         .select("email")
@@ -30,7 +31,7 @@ async function resolveEmail(identity: string): Promise<string | null> {
 }
 
 export default function SignIn() {
-    const [identity, setIdentity] = useState(""); // kullanıcı adı veya e-posta
+    const [identity, setIdentity] = useState("");
     const [password, setPassword] = useState("");
 
     const onSignIn = async () => {
@@ -45,50 +46,33 @@ export default function SignIn() {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"} // iOS için padding daha iyi çalışır
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{ flex: 1 }}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <View style={{ flex: 1, justifyContent: "center", padding: 20, gap: 12 }}>
-                    <Text style={{ fontSize: 26, fontWeight: "800", textAlign: "center" }}>
-                        Giriş Yap
-                    </Text>
+                <View style={commonStyles.authContainer}>
+                    <Text style={commonStyles.authTitle}>Giriş Yap</Text>
 
                     <TextInput
                         placeholder="Kullanıcı adı veya e-posta"
                         autoCapitalize="none"
                         value={identity}
                         onChangeText={setIdentity}
-                        style={{ borderWidth: 1, padding: 12, borderRadius: 10 }}
+                        style={commonStyles.input}
                     />
                     <TextInput
                         placeholder="Şifre"
                         secureTextEntry
                         value={password}
                         onChangeText={setPassword}
-                        style={{ borderWidth: 1, padding: 12, borderRadius: 10 }}
+                        style={commonStyles.input}
                     />
 
-                    <TouchableOpacity
-                        onPress={onSignIn}
-                        style={{
-                            backgroundColor: "#2563eb",
-                            padding: 14,
-                            borderRadius: 12,
-                        }}
-                    >
-                        <Text
-                            style={{
-                                textAlign: "center",
-                                fontWeight: "700",
-                                color: "#fff",
-                            }}
-                        >
-                            Giriş Yap
-                        </Text>
+                    <TouchableOpacity onPress={onSignIn} style={commonStyles.authButton}>
+                        <Text style={commonStyles.authButtonText}>Giriş Yap</Text>
                     </TouchableOpacity>
 
-                    <Text style={{ textAlign: "center" }}>
+                    <Text style={commonStyles.authLink}>
                         Hesabın yok mu? <Link href="/(auth)/sign-up">Kayıt ol</Link>
                     </Text>
                 </View>

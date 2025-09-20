@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react";
 import {
     View,
     Text,
-    StyleSheet,
     ScrollView,
     FlatList,
+    StyleSheet,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { supabase } from "@/lib/supabase";
 import { getSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
 import { useRouter } from "expo-router";
+import { commonStyles } from "app/styles/common";
+
 const DEFAULT_CATEGORIES = [
     { id: "disease", title: "🤒 Hastalık" },
     { id: "vaccine", title: "💉 Aşı" },
@@ -91,9 +93,9 @@ export default function HomeScreen() {
     };
 
     return (
-        <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
+        <ScrollView style={commonStyles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             {/* 📌 Kategoriler */}
-            <Text style={styles.sectionTitle}>Kategoriler</Text>
+            <Text style={commonStyles.sectionTitle}>Kategoriler</Text>
             <FlatList
                 data={DEFAULT_CATEGORIES}
                 horizontal
@@ -110,8 +112,8 @@ export default function HomeScreen() {
             />
 
             {/* 📌 Takvim */}
-            <Text style={styles.sectionTitle}>Takvim</Text>
-            <View style={styles.calendarWrap}>
+            <Text style={commonStyles.sectionTitle}>Takvim</Text>
+            <View style={localStyles.calendarWrap}>
                 <Calendar
                     current={new Date().toISOString().slice(0, 10)}
                     markedDates={records.reduce((acc, r) => {
@@ -135,15 +137,7 @@ export default function HomeScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: "#0f172a" },
-    sectionTitle: {
-        color: "#fff",
-        fontSize: 18,
-        fontWeight: "700",
-        marginVertical: 12,
-        marginLeft: 16,
-    },
+const localStyles = StyleSheet.create({
     calendarWrap: {
         backgroundColor: "#fff",
         borderRadius: 16,

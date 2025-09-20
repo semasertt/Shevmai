@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
+import {commonStyles} from "app/styles/common";
 
 export default function ProfileScreen() {
     const [currentChild, setCurrentChild] = useState<any>(null);
@@ -107,7 +108,7 @@ export default function ProfileScreen() {
 
     if (!currentChild) {
         return (
-            <View style={styles.page}>
+            <View style={commonStyles.page}>
                 <Text style={{ color: "#fff", textAlign: "center", marginTop: 40 }}>
                     Yükleniyor...
                 </Text>
@@ -116,35 +117,35 @@ export default function ProfileScreen() {
     }
 
     return (
-        <ScrollView style={styles.page}>
+        <ScrollView style={commonStyles.page}>
             {/* 📌 Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Profil</Text>
+            <View style={commonStyles.header}>
+                <Text style={commonStyles.headerTitle}>Profil</Text>
                 <TouchableOpacity onPress={() => router.push("/settings" as any)}>
                     <Ionicons name="settings-outline" size={22} color="#fff" />
                 </TouchableOpacity>
             </View>
 
             {/* 👤 Çocuk Bilgileri Kartı */}
-            <View style={styles.card}>
+            <View style={commonStyles.card}>
                 <View style={{ alignItems: "center" }}>
                     <TouchableOpacity onPress={pickImage}>
                         <Image
                             source={{ uri: currentChild.avatar || "https://placehold.co/100" }}
-                            style={styles.avatar}
+                            style={commonStyles.avatar}
                         />
                     </TouchableOpacity>
-                    <Text style={styles.name}>{currentChild.name}</Text>
+                    <Text style={commonStyles.name}>{currentChild.name}</Text>
                 </View>
 
                 {["birthdate", "height", "weight", "sleep_pattern"].map((field) => (
-                    <Text key={field} style={styles.detail}>
+                    <Text key={field} style={commonStyles.detail}>
                         {formatFieldName(field)}: {currentChild[field] || "-"}
                     </Text>
                 ))}
 
                 <TouchableOpacity
-                    style={styles.editBtn}
+                    style={commonStyles.editBtn}
                     onPress={() => {
                         setEditFields(["birthdate", "height", "weight", "sleep_pattern"]);
                         setEditModalVisible(true);
@@ -156,16 +157,16 @@ export default function ProfileScreen() {
             </View>
 
             {/* 💊 Sağlık Bilgileri Kartı */}
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>💊 Sağlık Bilgileri</Text>
+            <View style={commonStyles.card}>
+                <Text style={commonStyles.sectionTitle}>💊 Sağlık Bilgileri</Text>
                 {["allergies", "vaccines", "illnesses"].map((field) => (
-                    <Text key={field} style={styles.detail}>
+                    <Text key={field} style={commonStyles.detail}>
                         {formatFieldName(field)}: {currentChild[field] || "-"}
                     </Text>
                 ))}
 
                 <TouchableOpacity
-                    style={styles.editBtn}
+                    style={commonStyles.editBtn}
                     onPress={() => {
                         setEditFields(["allergies", "vaccines", "illnesses"]);
                         setEditModalVisible(true);
@@ -177,38 +178,38 @@ export default function ProfileScreen() {
             </View>
 
             {/* 📊 Sağlık Özetim Kartı */}
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>📊 Sağlık Özetim</Text>
-                <View style={styles.statsGrid}>
-                    <View style={styles.statCard}>
+            <View style={commonStyles.card}>
+                <Text style={commonStyles.sectionTitle}>📊 Sağlık Özetim</Text>
+                <View style={commonStyles.statsGrid}>
+                    <View style={commonStyles.statCard}>
                         <Ionicons name="medical" size={24} color="#60a5fa" />
-                        <Text style={styles.statNumber}>24</Text>
-                        <Text style={styles.statLabel}>Toplam Kayıt</Text>
+                        <Text style={commonStyles.statNumber}>24</Text>
+                        <Text style={commonStyles.statLabel}>Toplam Kayıt</Text>
                     </View>
-                    <View style={styles.statCard}>
+                    <View style={commonStyles.statCard}>
                         <Ionicons name="alert-circle" size={24} color="#f87171" />
-                        <Text style={styles.statNumber}>3</Text>
-                        <Text style={styles.statLabel}>Acil Durum</Text>
+                        <Text style={commonStyles.statNumber}>3</Text>
+                        <Text style={commonStyles.statLabel}>Acil Durum</Text>
                     </View>
-                    <View style={styles.statCard}>
+                    <View style={commonStyles.statCard}>
                         <Ionicons name="trending-up" size={24} color="#34d399" />
-                        <Text style={styles.statNumber}>12</Text>
-                        <Text style={styles.statLabel}>İlaç Kaydı</Text>
+                        <Text style={commonStyles.statNumber}>12</Text>
+                        <Text style={commonStyles.statLabel}>İlaç Kaydı</Text>
                     </View>
                 </View>
             </View>
 
             {/* Düzenleme Modal */}
             <Modal visible={editModalVisible} transparent animationType="slide">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Bilgileri Düzenle</Text>
+                <View style={commonStyles.modalOverlay}>
+                    <View style={commonStyles.modalContent}>
+                        <Text style={commonStyles.modalTitle}>Bilgileri Düzenle</Text>
 
                         {editFields.map((field) => (
                             <View key={field} style={{ marginBottom: 12 }}>
-                                <Text style={styles.label}>{formatFieldName(field)}</Text>
+                                <Text style={commonStyles.label}>{formatFieldName(field)}</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={commonStyles.input}
                                     value={formValues[field] || ""}
                                     onChangeText={(val) =>
                                         setFormValues((prev: any) => ({
@@ -222,18 +223,18 @@ export default function ProfileScreen() {
                             </View>
                         ))}
 
-                        <View style={styles.modalButtons}>
+                        <View style={commonStyles.modalButtons}>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.cancelButton]}
+                                style={[commonStyles.modalButton, commonStyles.cancelButton]}
                                 onPress={() => setEditModalVisible(false)}
                             >
-                                <Text style={styles.modalButtonText}>İptal</Text>
+                                <Text style={commonStyles.modalButtonText}>İptal</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.modalButton, styles.saveButton]}
+                                style={[commonStyles.modalButton, commonStyles.saveButton]}
                                 onPress={saveEdit}
                             >
-                                <Text style={styles.modalButtonText}>Kaydet</Text>
+                                <Text style={commonStyles.modalButtonText}>Kaydet</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -243,83 +244,3 @@ export default function ProfileScreen() {
     );
 }
 
-const styles = StyleSheet.create({
-    page: { flex: 1, backgroundColor: "#0f172a", padding: 12 },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 16,
-    },
-    headerTitle: { color: "#fff", fontSize: 20, fontWeight: "700" },
-    card: {
-        backgroundColor: "#1e293b",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-    },
-    avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        borderWidth: 3,
-        borderColor: "#4f46e5",
-        marginBottom: 12,
-    },
-    name: { fontSize: 20, fontWeight: "700", color: "#fff", marginBottom: 8 },
-    detail: { fontSize: 14, color: "#c7d2fe", marginTop: 4 },
-    sectionTitle: { color: "#fff", fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-    editBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#4f46e5",
-        padding: 10,
-        borderRadius: 8,
-        marginTop: 12,
-        alignSelf: "flex-start",
-    },
-    statsGrid: { flexDirection: "row", justifyContent: "space-between" },
-    statCard: {
-        backgroundColor: "#374151",
-        padding: 15,
-        borderRadius: 10,
-        alignItems: "center",
-        flex: 1,
-        marginHorizontal: 5,
-    },
-    statNumber: { color: "#fff", fontSize: 20, fontWeight: "bold", marginVertical: 5 },
-    statLabel: { color: "#c7d2fe", fontSize: 12 },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    modalContent: {
-        backgroundColor: "#1e293b",
-        padding: 20,
-        borderRadius: 15,
-        width: "80%",
-    },
-    modalTitle: { color: "#fff", fontSize: 18, fontWeight: "bold", marginBottom: 20 },
-    input: {
-        backgroundColor: "#374151",
-        color: "#fff",
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 20,
-        fontSize: 16,
-    },
-    label: { color: "#fff", marginBottom: 6, fontWeight: "600" },
-    modalButtons: { flexDirection: "row", justifyContent: "space-between" },
-    modalButton: {
-        padding: 15,
-        borderRadius: 10,
-        flex: 1,
-        marginHorizontal: 5,
-        alignItems: "center",
-    },
-    cancelButton: { backgroundColor: "#6b7280" },
-    saveButton: { backgroundColor: "#4f46e5" },
-    modalButtonText: { color: "#fff", fontWeight: "bold" },
-});
