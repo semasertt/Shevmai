@@ -130,7 +130,10 @@ export const commonStyles = StyleSheet.create({
     headerIconRight: {
         paddingRight: 12,
     },
-
+    placeholder: {
+        alignItems: "center",
+        justifyContent: "center",
+    },
 
     // CARD
     card: {
