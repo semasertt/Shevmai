@@ -41,31 +41,42 @@ export default function AddChildScreen() {
             return;
         }
 
-        const { error } = await supabase.from("children").insert({
-            parent_id: user.id,
-            name: childName,
-            birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
-            gender,
-            height: height.toString(),
-            weight: weight.toString(),
-            sleep_pattern: sleepPattern,
-            allergies,
-            vaccines,
-            illnesses,
-        });
+        // ✅ Çocuğu ekle ve id'sini al
+        const { data, error } = await supabase
+            .from("children")
+            .insert({
+                parent_id: user.id,
+                name: childName,
+                birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
+                gender,
+                height: height.toString(),
+                weight: weight.toString(),
+                sleep_pattern: sleepPattern,
+                allergies,
+                vaccines,
+                illnesses,
+            })
+            .select()
+            .single();
 
         if (error) {
             Alert.alert("Hata", error.message);
         } else {
-            Alert.alert("Başarılı", "Çocuk eklendi");
-            router.replace("/choose-child");
+            // ✅ Yeni eklenen çocuğu otomatik seçili yap
+            await supabase
+                .from("profiles")
+                .update({ selected_child_id: data.id })
+                .eq("id", user.id);
+
+            Alert.alert("Başarılı", "Çocuk eklendi ve seçildi");
+            router.replace("/(tabs)/home"); // direkt ana ekrana
         }
     };
 
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={80} // header varsa değerle oynayabilirsin
+            keyboardVerticalOffset={80}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
                 <ScrollView
@@ -118,14 +129,15 @@ export default function AddChildScreen() {
                                     key={option}
                                     onPress={() => setGender(option)}
                                     style={[
-                                       commonStyles.genderBtn,
+                                        commonStyles.genderBtn,
                                         gender === option && commonStyles.genderBtnSelected,
                                     ]}
                                 >
                                     <Text
                                         style={[
                                             commonStyles.genderBtnText,
-                                            gender === option && commonStyles.genderBtnTextSelected,
+                                            gender === option &&
+                                            commonStyles.genderBtnTextSelected,
                                         ]}
                                     >
                                         {option}
@@ -209,27 +221,27 @@ export default function AddChildScreen() {
                     <View style={commonStyles.card}>
                         <Text style={commonStyles.label}>Uyku Düzeni</Text>
                         <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map(
-                                (option) => (
-                                    <TouchableOpacity
-                                        key={option}
-                                        onPress={() => setSleepPattern(option)}
+                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map((option) => (
+                                <TouchableOpacity
+                                    key={option}
+                                    onPress={() => setSleepPattern(option)}
+                                    style={[
+                                        commonStyles.genderBtn,
+                                        sleepPattern === option &&
+                                        commonStyles.genderBtnSelected,
+                                    ]}
+                                >
+                                    <Text
                                         style={[
-                                            commonStyles.genderBtn,
-                                            sleepPattern === option && commonStyles.genderBtnSelected,
+                                            commonStyles.genderBtnText,
+                                            sleepPattern === option &&
+                                            commonStyles.genderBtnTextSelected,
                                         ]}
                                     >
-                                        <Text
-                                            style={[
-                                                commonStyles.genderBtnText,
-                                                sleepPattern === option && commonStyles.genderBtnTextSelected,
-                                            ]}
-                                        >
-                                            {option}
-                                        </Text>
-                                    </TouchableOpacity>
-                                )
-                            )}
+                                        {option}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
                         </View>
                     </View>
 
@@ -267,4 +279,3 @@ export default function AddChildScreen() {
         </KeyboardAvoidingView>
     );
 }
-

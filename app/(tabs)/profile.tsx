@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
     View,
     Text,
-    StyleSheet,
     Image,
     ScrollView,
     TouchableOpacity,
@@ -10,12 +9,12 @@ import {
     Modal,
     Alert,
 } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
-import {commonStyles} from "@/src/styles/common";
+import { commonStyles } from "@/src/styles/common";
+import { useFocusEffect } from "@react-navigation/native"; // ✅ eklendi
 
 export default function ProfileScreen() {
     const [currentChild, setCurrentChild] = useState<any>(null);
@@ -23,37 +22,37 @@ export default function ProfileScreen() {
     const [editFields, setEditFields] = useState<string[]>([]);
     const [formValues, setFormValues] = useState<any>({});
 
-    useEffect(() => {
-        const loadChild = async () => {
-            // 🔑 Giriş yapan kullanıcıyı al
-            const { data: userData } = await supabase.auth.getUser();
-            const user = userData?.user;
-            if (!user) return;
+    const loadChild = async () => {
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (!user) return;
 
-            // 🔑 Kullanıcının profilinden seçili çocuk ID'sini getir
-            const { data: profile, error: pErr } = await supabase
-                .from("profiles")
-                .select("selected_child_id")
-                .eq("id", user.id)
-                .single();
+        const { data: profile } = await supabase
+            .from("profiles")
+            .select("selected_child_id")
+            .eq("id", user.id)
+            .single();
 
-            if (pErr || !profile?.selected_child_id) return;
+        if (!profile?.selected_child_id) return;
 
-            // 🔑 Seçili çocuğu getir
-            const { data: child, error: cErr } = await supabase
-                .from("children")
-                .select("*")
-                .eq("id", profile.selected_child_id)
-                .single();
+        const { data: child } = await supabase
+            .from("children")
+            .select("*")
+            .eq("id", profile.selected_child_id)
+            .single();
 
-            if (!cErr && child) {
-                setCurrentChild(child);
-                setFormValues(child);
-            }
-        };
+        if (child) {
+            setCurrentChild(child);
+            setFormValues(child);
+        }
+    };
 
-        loadChild();
-    }, []);
+    // ✅ Profil ekranına her odaklanıldığında çocuk bilgilerini yenile
+    useFocusEffect(
+        useCallback(() => {
+            loadChild();
+        }, [])
+    );
 
     const pickImage = async () => {
         try {
@@ -95,7 +94,7 @@ export default function ProfileScreen() {
     const formatFieldName = (field: string) => {
         const fieldNames: { [key: string]: string } = {
             name: "İsim",
-            birthdate: "Doğum Tarihi", // ✅ doğru kolon adı
+            birthdate: "Doğum Tarihi",
             height: "Boy",
             weight: "Kilo",
             sleep_pattern: "Uyku Düzeni",
@@ -109,9 +108,7 @@ export default function ProfileScreen() {
     if (!currentChild) {
         return (
             <View style={commonStyles.page}>
-                <Text style={{ color: "#fff", textAlign: "center", marginTop: 40 }}>
-                    Yükleniyor...
-                </Text>
+                <Text style={commonStyles.emptyText}>Yükleniyor...</Text>
             </View>
         );
     }
@@ -122,7 +119,7 @@ export default function ProfileScreen() {
             <View style={commonStyles.header}>
                 <Text style={commonStyles.headerTitle}>Profil</Text>
                 <TouchableOpacity onPress={() => router.push("/settings" as any)}>
-                    <Ionicons name="settings-outline" size={22} color="#fff" />
+                    <Ionicons name="settings-outline" size={22} color="#5c4033" />
                 </TouchableOpacity>
             </View>
 
@@ -152,7 +149,7 @@ export default function ProfileScreen() {
                     }}
                 >
                     <Ionicons name="create-outline" size={18} color="#fff" />
-                    <Text style={{ color: "#fff", marginLeft: 6 }}>Düzenle</Text>
+                    <Text style={commonStyles.editBtnText}>Düzenle</Text>
                 </TouchableOpacity>
             </View>
 
@@ -173,7 +170,7 @@ export default function ProfileScreen() {
                     }}
                 >
                     <Ionicons name="create-outline" size={18} color="#fff" />
-                    <Text style={{ color: "#fff", marginLeft: 6 }}>Düzenle</Text>
+                    <Text style={commonStyles.editBtnText}>Düzenle</Text>
                 </TouchableOpacity>
             </View>
 
@@ -243,4 +240,3 @@ export default function ProfileScreen() {
         </ScrollView>
     );
 }
-

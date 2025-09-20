@@ -2,8 +2,8 @@ import { StyleSheet } from "react-native";
 
 export const commonStyles = StyleSheet.create({
     // GENEL
-    container: { flex: 1, backgroundColor: "#fff", padding: 24 },
-    page: { flex: 1, backgroundColor: "#fff", padding: 16 },
+    container: { flex: 1, backgroundColor: "#fff", padding: 24, paddingBottom: 32 },
+    page: { flex: 1, backgroundColor: "#fff", padding: 16, paddingBottom: 32 },
     sectionTitle: { color: "#5c4033", fontSize: 18, fontWeight: "700", marginBottom: 10 },
 
     // ONBOARDING
@@ -102,7 +102,7 @@ export const commonStyles = StyleSheet.create({
         marginTop: 12,
         alignSelf: "flex-start",
     },
-    editBtnText: { color: "#fff", marginLeft: 6 },
+    editBtnText: { color: "#fff", marginLeft: 6, fontWeight: "600" },
 
     // HEADER
     header: {
@@ -112,7 +112,7 @@ export const commonStyles = StyleSheet.create({
         marginBottom: 16,
         padding: 15,
         paddingTop: 30,
-        backgroundColor: "#f5ede3",
+        backgroundColor: "#fffaf5", // biraz daha açık
     },
     headerTitle: { color: "#5c4033", fontSize: 20, fontWeight: "700" },
 
@@ -138,7 +138,7 @@ export const commonStyles = StyleSheet.create({
         marginBottom: 12,
     },
     name: { fontSize: 20, fontWeight: "700", color: "#5c4033", marginBottom: 8 },
-    detail: { fontSize: 14, color: "#6b7280", marginTop: 4 },
+    detail: { fontSize: 15, color: "#5c4033", marginTop: 4 }, // ✅ kahverengi yapıldı
 
     // CHILD CARD (choose-child)
     childCard: {
@@ -153,7 +153,7 @@ export const commonStyles = StyleSheet.create({
     // STAT CARDS
     statsGrid: { flexDirection: "row", justifyContent: "space-between" },
     statCard: {
-        backgroundColor: "#f3e5d8",
+        backgroundColor: "#fffaf5", // ✅ uyumlu hale getirildi
         padding: 15,
         borderRadius: 10,
         alignItems: "center",
@@ -259,6 +259,14 @@ export const commonStyles = StyleSheet.create({
     saveButton: { backgroundColor: "#b47e5d" },
     modalButtonText: { color: "#fff", fontWeight: "bold" },
 
+    // BOŞ MESAJLAR
+    emptyText: {
+        textAlign: "center",
+        marginTop: 40,
+        color: "#9ca3af",
+        fontSize: 14,
+    },
+
     // HOME TAKVIM
     calendarWrap: {
         backgroundColor: "#fff",
@@ -321,13 +329,14 @@ export const commonStyles = StyleSheet.create({
 
     // NAVIGATION
     tabBar: {
-        backgroundColor: "#f5ede3",  // ✅ doğru: nesne içinde string
+        backgroundColor: "#f5ede3",
         height: 90,
         borderTopWidth: 1,
         borderTopColor: "#e5e7eb",
+        paddingBottom: 10, // ✅ tuşlarla çakışmayı önler
     },
 });
 export const themeColors = {
-    tabBarActive: "#b47e5d",   // aktif ikon & yazı rengi
-    tabBarInactive: "#9ca3af", // pasif ikon & yazı rengi
+    tabBarActive: "#b47e5d",
+    tabBarInactive: "#9ca3af",
 };
