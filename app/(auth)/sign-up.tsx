@@ -41,45 +41,57 @@ export default function SignUp() {
             return Alert.alert("Uyarı", "Çocuğun adı gerekli.");
         }
 
-        const { error: sErr } = await supabase.auth.signUp({ email, password });
+        // 🔎 Username kontrolü
+        const { data: existingUser, error: checkErr } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("username", username)
+            .maybeSingle();
+
+        if (checkErr) return Alert.alert("Hata", "Kullanıcı adı kontrolü başarısız.");
+        if (existingUser) return Alert.alert("Hata", "Bu kullanıcı adı zaten alınmış.");
+
+        // 📝 Yeni kullanıcı oluştur
+        const { data: signUpData, error: sErr } = await supabase.auth.signUp({
+            email,
+            password,
+        });
         if (sErr) return Alert.alert("Kayıt Hatası", sErr.message);
 
-        const { error: iErr } = await supabase.auth.signInWithPassword({ email, password });
-        if (iErr) return Alert.alert("Giriş Hatası", iErr.message);
+        const user = signUpData?.user;
+        if (!user) return Alert.alert("Hata", "Kullanıcı oluşturulamadı.");
 
-        const { data: u } = await supabase.auth.getUser();
-        if (!u?.user) return Alert.alert("Hata", "Kullanıcı bilgisi alınamadı.");
-
+        // 📌 Profil kaydı (duplicate önlemek için upsert)
         const { error: pErr } = await supabase
             .from("profiles")
-            .upsert({ id: u.user.id, username, email }, { onConflict: "id" });
+            .upsert({ id: user.id, username, email }, { onConflict: "id" });
         if (pErr) return Alert.alert("Kayıt Hatası", pErr.message);
 
+        // 📌 Çocuk kaydı
         const { data: childData, error: cErr } = await supabase
             .from("children")
             .insert({
+                parent_id: user.id,
                 name: childName,
-                birth_date: birthDate ? birthDate.toISOString().split("T")[0] : null,
-                gender: gender,
+                birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null, // ✅ doğru kolon
+                gender,
                 height: height.toString(),
                 weight: weight.toString(),
                 sleep_pattern: sleepPattern,
-                allergies: allergies,
-                vaccines: vaccines,
-                illnesses: illnesses,
+                allergies,
+                vaccines,
+                illnesses,
             })
             .select()
             .single();
 
         if (cErr) return Alert.alert("Çocuk Kaydı Hatası", cErr.message);
 
-        await supabase
-            .from("profiles")
-            .update({ selected_child_id: childData.id })
-            .eq("id", u.user.id);
+        // 📌 Aktif çocuk id güncelle
+        await supabase.from("profiles").update({ selected_child_id: childData.id }).eq("id", user.id);
 
         Alert.alert("Başarılı", "Hesap ve çocuk bilgileri oluşturuldu.");
-        router.replace("/home");
+        router.replace("/(tabs)/home");
     };
 
     return (
@@ -120,6 +132,7 @@ export default function SignUp() {
 
                     <Text style={styles.sectionTitle}>Çocuk Bilgileri</Text>
 
+                    {/* Adı + Doğum Tarihi */}
                     <View style={styles.card}>
                         <TextInput
                             placeholder="Adı"
@@ -129,7 +142,6 @@ export default function SignUp() {
                             placeholderTextColor="#6b7280"
                         />
 
-                        {/* Doğum Tarihi */}
                         <Text style={styles.label}>Doğum Tarihi</Text>
                         <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
                             <Text style={{ color: birthDate ? "#111827" : "#6b7280" }}>
@@ -157,10 +169,7 @@ export default function SignUp() {
                                 <TouchableOpacity
                                     key={option}
                                     onPress={() => setGender(option)}
-                                    style={[
-                                        styles.genderBtn,
-                                        gender === option && styles.genderBtnSelected,
-                                    ]}
+                                    style={[styles.genderBtn, gender === option && styles.genderBtnSelected]}
                                 >
                                     <Text
                                         style={[
@@ -194,8 +203,6 @@ export default function SignUp() {
                                 }}
                                 keyboardType="numeric"
                                 style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
-                                placeholder="Boy"
-                                placeholderTextColor="#6b7280"
                             />
 
                             <TouchableOpacity
@@ -226,8 +233,6 @@ export default function SignUp() {
                                 }}
                                 keyboardType="numeric"
                                 style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
-                                placeholder="Kilo"
-                                placeholderTextColor="#6b7280"
                             />
 
                             <TouchableOpacity
@@ -247,10 +252,7 @@ export default function SignUp() {
                                 <TouchableOpacity
                                     key={option}
                                     onPress={() => setSleepPattern(option)}
-                                    style={[
-                                        styles.genderBtn,
-                                        sleepPattern === option && styles.genderBtnSelected,
-                                    ]}
+                                    style={[styles.genderBtn, sleepPattern === option && styles.genderBtnSelected]}
                                 >
                                     <Text
                                         style={[
@@ -304,99 +306,19 @@ export default function SignUp() {
 }
 
 const styles = StyleSheet.create({
-    page: {
-        flex: 1,
-        backgroundColor: "#0f172a",
-        padding: 20,
-    },
-    title: {
-        fontSize: 26,
-        fontWeight: "800",
-        textAlign: "center",
-        marginBottom: 16,
-        color: "#fff",
-    },
-    card: {
-        backgroundColor: "#f8fafc",
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 16,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: "#cbd5e1",
-        padding: 12,
-        borderRadius: 10,
-        marginBottom: 12,
-        backgroundColor: "#fff",
-        color: "#111827",
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-        marginBottom: 10,
-        color: "#fff",
-    },
-    label: {
-        marginBottom: 8,
-        fontWeight: "bold",
-        color: "#111827",
-    },
-    counterRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 4,
-    },
-    counterBtn: {
-        backgroundColor: "#2563eb",
-        padding: 10,
-        borderRadius: 8,
-    },
-    counterText: {
-        color: "#fff",
-        fontSize: 20,
-        fontWeight: "bold",
-    },
-    counterValue: {
-        marginHorizontal: 12,
-        fontSize: 18,
-        color: "#111827",
-    },
-    submitBtn: {
-        backgroundColor: "#2563eb",
-        padding: 14,
-        borderRadius: 12,
-        marginBottom: 20,
-    },
-    submitText: {
-        textAlign: "center",
-        fontWeight: "800",
-        color: "#fff",
-    },
-    genderBtn: {
-        borderWidth: 1,
-        borderColor: "#cbd5e1",
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        marginRight: 8,
-        marginBottom: 8,
-        backgroundColor: "#fff",
-    },
-    genderBtnSelected: {
-        backgroundColor: "#2563eb",
-        borderColor: "#2563eb",
-    },
-    genderBtnText: {
-        fontWeight: "600",
-        color: "#111827",
-    },
-    genderBtnTextSelected: {
-        color: "#fff",
-    },
+    page: { flex: 1, backgroundColor: "#0f172a", padding: 20 },
+    title: { fontSize: 26, fontWeight: "800", textAlign: "center", marginBottom: 16, color: "#fff" },
+    card: { backgroundColor: "#f8fafc", borderRadius: 12, padding: 12, marginBottom: 16 },
+    input: { borderWidth: 1, borderColor: "#cbd5e1", padding: 12, borderRadius: 10, marginBottom: 12, backgroundColor: "#fff", color: "#111827" },
+    sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10, color: "#fff" },
+    label: { marginBottom: 8, fontWeight: "bold", color: "#111827" },
+    counterRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
+    counterBtn: { backgroundColor: "#2563eb", padding: 10, borderRadius: 8 },
+    counterText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
+    submitBtn: { backgroundColor: "#2563eb", padding: 14, borderRadius: 12, marginBottom: 20 },
+    submitText: { textAlign: "center", fontWeight: "800", color: "#fff" },
+    genderBtn: { borderWidth: 1, borderColor: "#cbd5e1", borderRadius: 8, paddingVertical: 10, paddingHorizontal: 20, marginRight: 8, marginBottom: 8, backgroundColor: "#fff" },
+    genderBtnSelected: { backgroundColor: "#2563eb", borderColor: "#2563eb" },
+    genderBtnText: { fontWeight: "600", color: "#111827" },
+    genderBtnTextSelected: { color: "#fff" },
 });
