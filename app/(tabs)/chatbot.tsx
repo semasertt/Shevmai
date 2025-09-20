@@ -9,7 +9,9 @@ import {
     KeyboardAvoidingView,
     Platform,
     Modal,
+    StatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import {
     requestImagePermissions,
@@ -36,7 +38,7 @@ import {commonStyles} from "@/src/styles/common";
 export default function Chatbot() {
     const [prompt, setPrompt] = useState("");
     const [messages, setMessages] = useState<any[]>([
-        { role: "bot", type: "text", text: "Merhaba 👋 Ben senin sağlık asistanın ShevmAI." },
+        {role: "bot", type: "text", text: "Merhaba 👋 Ben senin sağlık asistanın ShevmAI."},
     ]);
     const [loading, setLoading] = useState(false);
     const [conversations, setConversations] = useState<any[]>([]);
@@ -55,14 +57,14 @@ export default function Chatbot() {
 
     useEffect(() => {
         if (messages.length > 0) {
-            flatListRef.current?.scrollToEnd({ animated: true });
+            flatListRef.current?.scrollToEnd({animated: true});
         }
         console.log("🟢 Chatbot komponenti yüklendi");
         console.log("🔑 Gemini API Key var mı:", !!process.env.EXPO_PUBLIC_GEMINI_API_KEY);
         console.log("👤 Kullanıcı girişi kontrol ediliyor...");
 
         // Kullanıcı durumunu kontrol et
-        supabase.auth.getUser().then(({ data, error }) => {
+        supabase.auth.getUser().then(({data, error}) => {
             if (error) {
                 console.error("❌ Kullanıcı hatası:", error);
             } else {
@@ -85,7 +87,7 @@ export default function Chatbot() {
 ` : "Çocuk bilgisi seçilmedi.";
 
         const userMessage = prompt.trim();
-        const newMessage = { role: "user", type: "text", text: userMessage };
+        const newMessage = {role: "user", type: "text", text: userMessage};
         setMessages((prev) => [...prev, newMessage]);
         setPrompt("");
         setLoading(true);
@@ -107,7 +109,7 @@ export default function Chatbot() {
                 );
 
 
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: followup }]);
+                setMessages((prev) => [...prev, {role: "bot", type: "text", text: followup}]);
 
                 return;
             }
@@ -122,7 +124,7 @@ export default function Chatbot() {
                     `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
                     "Sadece sohbet et, kısa cevap ver."
                 );
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiResult }]);
+                setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiResult}]);
                 return;
             }
 
@@ -143,13 +145,13 @@ export default function Chatbot() {
                 setActiveEventId(result.eventId);
             }
 
-            setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiAnswer }]);
+            setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiAnswer}]);
 
             // 6. Eksik bilgi varsa, soru sor ve FOLLOWUP moduna geç
             if (result.questions && result.questions.length > 0) {
                 setMessages((prev) => [
                     ...prev,
-                    { role: "bot", type: "text", text: result.questions[0] },
+                    {role: "bot", type: "text", text: result.questions[0]},
                 ]);
                 setPendingDetail(result.eventId || activeEventId);
                 setPendingQuestion(true); // Sonraki mesajlar için FOLLOWUP modu
@@ -159,7 +161,7 @@ export default function Chatbot() {
             console.error("❌ askGemini error:", err);
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", type: "text", text: "⚠️ Hata oluştu." },
+                {role: "bot", type: "text", text: "⚠️ Hata oluştu."},
             ]);
         } finally {
             setLoading(false);
@@ -185,7 +187,7 @@ export default function Chatbot() {
             const img = await pickImageFromGallery();
             if (!img) return;
 
-            const newMessage = { role: "user", type: "image", uri: img.uri };
+            const newMessage = {role: "user", type: "image", uri: img.uri};
             setMessages((prev) => [...prev, newMessage]);
             setLoading(true);
 
@@ -200,7 +202,7 @@ export default function Chatbot() {
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
                     "Bu görseli kısa bir şekilde yorumla, sadece sohbet et."
                 );
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiAnswer }]);
+                setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiAnswer}]);
                 return;
             }
 
@@ -232,14 +234,14 @@ export default function Chatbot() {
 
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", type: "text", text: aiAnswer },
+                {role: "bot", type: "text", text: aiAnswer},
             ]);
 
             // 5. Eksik bilgi sorusu varsa
             if (result.questions && result.questions.length > 0) {
                 setMessages((prev) => [
                     ...prev,
-                    { role: "bot", type: "text", text: result.questions[0] },
+                    {role: "bot", type: "text", text: result.questions[0]},
                 ]);
                 setPendingDetail(result.eventId || activeEventId);
                 setPendingQuestion(true);
@@ -249,7 +251,7 @@ export default function Chatbot() {
             console.error("❌ handleGallery error:", err);
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu." },
+                {role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu."},
             ]);
         } finally {
             setLoading(false);
@@ -273,7 +275,7 @@ export default function Chatbot() {
             const img = await takePhotoWithCamera();
             if (!img) return;
 
-            const newMessage = { role: "user", type: "image", uri: img.uri };
+            const newMessage = {role: "user", type: "image", uri: img.uri};
             setMessages((prev) => [...prev, newMessage]);
             setLoading(true);
 
@@ -288,7 +290,7 @@ export default function Chatbot() {
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
                     "Bu görseli kısa bir şekilde yorumla, sadece sohbet et."
                 );
-                setMessages((prev) => [...prev, { role: "bot", type: "text", text: aiAnswer }]);
+                setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiAnswer}]);
                 return;
             }
 
@@ -320,14 +322,14 @@ export default function Chatbot() {
 
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", type: "text", text: aiAnswer },
+                {role: "bot", type: "text", text: aiAnswer},
             ]);
 
             // 5. Eksik bilgi sorusu varsa
             if (result.questions && result.questions.length > 0) {
                 setMessages((prev) => [
                     ...prev,
-                    { role: "bot", type: "text", text: result.questions[0] },
+                    {role: "bot", type: "text", text: result.questions[0]},
                 ]);
                 setPendingDetail(result.eventId || activeEventId);
                 setPendingQuestion(true);
@@ -337,7 +339,7 @@ export default function Chatbot() {
             console.error("❌ handleCamera error:", err);
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu." },
+                {role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu."},
             ]);
         } finally {
             setLoading(false);
@@ -349,7 +351,7 @@ export default function Chatbot() {
         const newConv = {
             id: Date.now(),
             title: `Konuşma ${conversations.length + 1}`,
-            messages: [{ role: "bot", type: "text", text: "Yeni konuşma başlatıldı 👋" }],
+            messages: [{role: "bot", type: "text", text: "Yeni konuşma başlatıldı 👋"}],
         };
         setConversations((prev) => [...prev, newConv]);
         setActiveConv(newConv.id);
@@ -361,52 +363,88 @@ export default function Chatbot() {
     };
     return (
         <KeyboardAvoidingView
-            style={commonStyles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 140 : 180}
-        >
-            {/* Header */}
-            <View style={commonStyles.header}>
-                <TouchableOpacity onPress={() => setShowSidebar(true)}>
-                    <Ionicons name="menu" size={24} color="#fff" />
-                </TouchableOpacity>
-                <Text style={commonStyles.headerTitle}>ShevmAI</Text>
-                <TouchableOpacity onPress={startNewConversation}>
-                    <Ionicons name="add-circle" size={26} color="#fff" />
-                </TouchableOpacity>
-            </View>
+            style={{ flex: 1, backgroundColor: "#fff" }}
 
-            {/* Mesajlar */}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 0}
+        >
+            {/* Status Bar */}
+            <StatusBar
+                backgroundColor="#f0e4d7" // krem rengi
+                barStyle="dark-content"   // yazılar siyah olsun
+            />
+
+            {/* 📌 Header (ScrollView dışında sabit) */}
+            <SafeAreaView style={commonStyles.safeArea}>
+                <View style={commonStyles.header}>
+                    <TouchableOpacity
+                        onPress={() => setShowSidebar(true)}
+                        style={commonStyles.headerIconLeft}
+                    >
+                        <Ionicons name="menu" size={24} color="#5c4033"/>
+                    </TouchableOpacity>
+
+                    <Text style={commonStyles.headerTitle}>Chatbot</Text>
+
+                    <TouchableOpacity
+                        onPress={startNewConversation}
+                        style={commonStyles.headerIconRight}
+                    >
+                        <Ionicons name="add-circle" size={26} color="#5c4033"/>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+
+            {/* 📌 Mesajlar */}
             <FlatList
                 ref={flatListRef}
                 data={messages}
-                renderItem={({ item }) => <ChatMessage item={item} />}
+                renderItem={({item}) => <ChatMessage item={item}/>}
                 keyExtractor={(_, index) => index.toString()}
-                contentContainerStyle={commonStyles.chatContainer}
+                contentContainerStyle={{
+                    ...commonStyles.chatContainer,
+                }}
             />
 
-            {/* Input */}
+            {/* 📌 Input */}
             <View style={commonStyles.inputContainer}>
                 <TouchableOpacity onPress={handleGallery}>
-                    <Ionicons name="image-outline" size={26} color="#60a5fa" style={{ marginRight: 10 }} />
+                    <Ionicons
+                        name="image-outline"
+                        size={26}
+                        color="#60a5fa"
+                        style={{marginRight: 10}}
+                    />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleCamera}>
-                    <Ionicons name="camera-outline" size={26} color="#60a5fa" style={{ marginRight: 10 }} />
+                    <Ionicons
+                        name="camera-outline"
+                        size={26}
+                        color="#60a5fa"
+                        style={{marginRight: 10}}
+                    />
                 </TouchableOpacity>
                 <TextInput
-                    style={commonStyles.input}
+                    style={commonStyles.inputChat}
                     placeholder="Bir şeyler yaz..."
                     placeholderTextColor="#94a3b8"
                     value={prompt}
                     onChangeText={setPrompt}
                     multiline
+                    textAlignVertical="top"
                 />
-                <TouchableOpacity style={commonStyles.sendButton} onPress={askGemini} disabled={loading}>
-                    <Text style={commonStyles.sendButtonText}>{loading ? "..." : "➤"}</Text>
+                <TouchableOpacity
+                    style={commonStyles.sendButton}
+                    onPress={askGemini}
+                    disabled={loading}
+                >
+                    <Text style={commonStyles.sendButtonText}>
+                        {loading ? "..." : "➤"}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Sidebar */}
+            {/* 📌 Sidebar */}
             <Modal visible={showSidebar} animationType="slide" transparent>
                 <View style={commonStyles.sidebarOverlay}>
                     <View style={commonStyles.sidebarContainer}>
@@ -425,4 +463,3 @@ export default function Chatbot() {
         </KeyboardAvoidingView>
     );
 }
-

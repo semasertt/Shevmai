@@ -14,7 +14,8 @@ import * as ImagePicker from "expo-image-picker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { commonStyles } from "@/src/styles/common";
-import { useFocusEffect } from "@react-navigation/native"; // ✅ eklendi
+import { useFocusEffect } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
     const [currentChild, setCurrentChild] = useState<any>(null);
@@ -47,7 +48,6 @@ export default function ProfileScreen() {
         }
     };
 
-    // ✅ Profil ekranına her odaklanıldığında çocuk bilgilerini yenile
     useFocusEffect(
         useCallback(() => {
             loadChild();
@@ -107,14 +107,14 @@ export default function ProfileScreen() {
 
     if (!currentChild) {
         return (
-            <View style={commonStyles.page}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
                 <Text style={commonStyles.emptyText}>Yükleniyor...</Text>
-            </View>
+            </SafeAreaView>
         );
     }
 
     return (
-        <ScrollView style={commonStyles.page}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
             {/* 📌 Header */}
             <View style={commonStyles.header}>
                 <Text style={commonStyles.headerTitle}>Profil</Text>
@@ -123,78 +123,81 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
 
-            {/* 👤 Çocuk Bilgileri Kartı */}
-            <View style={commonStyles.card}>
-                <View style={{ alignItems: "center" }}>
-                    <TouchableOpacity onPress={pickImage}>
-                        <Image
-                            source={{ uri: currentChild.avatar || "https://placehold.co/100" }}
-                            style={commonStyles.avatar}
-                        />
+            {/* 📌 İçerik */}
+            <ScrollView contentContainerStyle={{padding:16, paddingBottom: 30 }}>
+                {/* 👤 Çocuk Bilgileri Kartı */}
+                <View style={[commonStyles.card, { marginTop: 20 }]}>
+                    <View style={{ alignItems: "center" }}>
+                        <TouchableOpacity onPress={pickImage}>
+                            <Image
+                                source={{ uri: currentChild.avatar || "https://placehold.co/100" }}
+                                style={commonStyles.avatar}
+                            />
+                        </TouchableOpacity>
+                        <Text style={commonStyles.name}>{currentChild.name}</Text>
+                    </View>
+
+                    {["birthdate", "height", "weight", "sleep_pattern"].map((field) => (
+                        <Text key={field} style={commonStyles.detail}>
+                            {formatFieldName(field)}: {currentChild[field] || "-"}
+                        </Text>
+                    ))}
+
+                    <TouchableOpacity
+                        style={commonStyles.editBtn}
+                        onPress={() => {
+                            setEditFields(["birthdate", "height", "weight", "sleep_pattern"]);
+                            setEditModalVisible(true);
+                        }}
+                    >
+                        <Ionicons name="create-outline" size={18} color="#fff" />
+                        <Text style={commonStyles.editBtnText}>Düzenle</Text>
                     </TouchableOpacity>
-                    <Text style={commonStyles.name}>{currentChild.name}</Text>
                 </View>
 
-                {["birthdate", "height", "weight", "sleep_pattern"].map((field) => (
-                    <Text key={field} style={commonStyles.detail}>
-                        {formatFieldName(field)}: {currentChild[field] || "-"}
-                    </Text>
-                ))}
+                {/* 💊 Sağlık Bilgileri Kartı */}
+                <View style={commonStyles.card}>
+                    <Text style={commonStyles.sectionTitle}>💊 Sağlık Bilgileri</Text>
+                    {["allergies", "vaccines", "illnesses"].map((field) => (
+                        <Text key={field} style={commonStyles.detail}>
+                            {formatFieldName(field)}: {currentChild[field] || "-"}
+                        </Text>
+                    ))}
 
-                <TouchableOpacity
-                    style={commonStyles.editBtn}
-                    onPress={() => {
-                        setEditFields(["birthdate", "height", "weight", "sleep_pattern"]);
-                        setEditModalVisible(true);
-                    }}
-                >
-                    <Ionicons name="create-outline" size={18} color="#fff" />
-                    <Text style={commonStyles.editBtnText}>Düzenle</Text>
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity
+                        style={commonStyles.editBtn}
+                        onPress={() => {
+                            setEditFields(["allergies", "vaccines", "illnesses"]);
+                            setEditModalVisible(true);
+                        }}
+                    >
+                        <Ionicons name="create-outline" size={18} color="#fff" />
+                        <Text style={commonStyles.editBtnText}>Düzenle</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {/* 💊 Sağlık Bilgileri Kartı */}
-            <View style={commonStyles.card}>
-                <Text style={commonStyles.sectionTitle}>💊 Sağlık Bilgileri</Text>
-                {["allergies", "vaccines", "illnesses"].map((field) => (
-                    <Text key={field} style={commonStyles.detail}>
-                        {formatFieldName(field)}: {currentChild[field] || "-"}
-                    </Text>
-                ))}
-
-                <TouchableOpacity
-                    style={commonStyles.editBtn}
-                    onPress={() => {
-                        setEditFields(["allergies", "vaccines", "illnesses"]);
-                        setEditModalVisible(true);
-                    }}
-                >
-                    <Ionicons name="create-outline" size={18} color="#fff" />
-                    <Text style={commonStyles.editBtnText}>Düzenle</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* 📊 Sağlık Özetim Kartı */}
-            <View style={commonStyles.card}>
-                <Text style={commonStyles.sectionTitle}>📊 Sağlık Özetim</Text>
-                <View style={commonStyles.statsGrid}>
-                    <View style={commonStyles.statCard}>
-                        <Ionicons name="medical" size={24} color="#60a5fa" />
-                        <Text style={commonStyles.statNumber}>24</Text>
-                        <Text style={commonStyles.statLabel}>Toplam Kayıt</Text>
-                    </View>
-                    <View style={commonStyles.statCard}>
-                        <Ionicons name="alert-circle" size={24} color="#f87171" />
-                        <Text style={commonStyles.statNumber}>3</Text>
-                        <Text style={commonStyles.statLabel}>Acil Durum</Text>
-                    </View>
-                    <View style={commonStyles.statCard}>
-                        <Ionicons name="trending-up" size={24} color="#34d399" />
-                        <Text style={commonStyles.statNumber}>12</Text>
-                        <Text style={commonStyles.statLabel}>İlaç Kaydı</Text>
+                {/* 📊 Sağlık Özetim Kartı */}
+                <View style={commonStyles.card}>
+                    <Text style={commonStyles.sectionTitle}>📊 Sağlık Özetim</Text>
+                    <View style={commonStyles.statsGrid}>
+                        <View style={commonStyles.statCard}>
+                            <Ionicons name="medical" size={24} color="#60a5fa" />
+                            <Text style={commonStyles.statNumber}>24</Text>
+                            <Text style={commonStyles.statLabel}>Toplam Kayıt</Text>
+                        </View>
+                        <View style={commonStyles.statCard}>
+                            <Ionicons name="alert-circle" size={24} color="#f87171" />
+                            <Text style={commonStyles.statNumber}>3</Text>
+                            <Text style={commonStyles.statLabel}>Acil Durum</Text>
+                        </View>
+                        <View style={commonStyles.statCard}>
+                            <Ionicons name="trending-up" size={24} color="#34d399" />
+                            <Text style={commonStyles.statNumber}>12</Text>
+                            <Text style={commonStyles.statLabel}>İlaç Kaydı</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
+            </ScrollView>
 
             {/* Düzenleme Modal */}
             <Modal visible={editModalVisible} transparent animationType="slide">
@@ -237,6 +240,6 @@ export default function ProfileScreen() {
                     </View>
                 </View>
             </Modal>
-        </ScrollView>
+        </SafeAreaView>
     );
 }
