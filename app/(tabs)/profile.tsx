@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy"; // ✅ legacy import
+import { decode } from "base64-arraybuffer";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { commonStyles } from "@/src/styles/common";
@@ -22,6 +24,11 @@ export default function ProfileScreen() {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editFields, setEditFields] = useState<string[]>([]);
     const [formValues, setFormValues] = useState<any>({});
+    const [loading, setLoading] = useState(false);
+
+    // ✅ Resim için yeni state
+    const [tempImage, setTempImage] = useState<string | null>(null);
+    const [previewVisible, setPreviewVisible] = useState(false);
 
     const loadChild = async () => {
         const { data: userData } = await supabase.auth.getUser();
@@ -54,43 +61,6 @@ export default function ProfileScreen() {
         }, [])
     );
 
-    const pickImage = async () => {
-        try {
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 0.8,
-            });
-
-            if (!result.canceled) {
-                setCurrentChild((prev: any) => ({
-                    ...prev,
-                    avatar: result.assets[0].uri,
-                }));
-                Alert.alert("Başarılı", "Profil resmi değiştirildi");
-            }
-        } catch (error) {
-            Alert.alert("Hata", "Resim yüklenirken bir hata oluştu");
-        }
-    };
-
-    const saveEdit = async () => {
-        if (!currentChild) return;
-        const { error } = await supabase
-            .from("children")
-            .update(formValues)
-            .eq("id", currentChild.id);
-
-        if (!error) {
-            setCurrentChild(formValues);
-            Alert.alert("Başarılı", "Bilgiler güncellendi");
-        } else {
-            Alert.alert("Hata", "Bilgiler güncellenemedi");
-        }
-        setEditModalVisible(false);
-    };
-
     const formatFieldName = (field: string) => {
         const fieldNames: { [key: string]: string } = {
             name: "İsim",
@@ -113,6 +83,99 @@ export default function ProfileScreen() {
         );
     }
 
+    // ✅ Resim seç → sadece önizleme için state'e koy
+    const pickImage = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: false, // crop kapalı
+                quality: 0.8,
+            });
+
+            if (result.canceled || !currentChild) return;
+
+            const file = result.assets[0];
+            setTempImage(file.uri);
+            setPreviewVisible(true); // ✅ modal aç
+        } catch (error) {
+            Alert.alert("Hata", "Resim seçilirken hata oluştu");
+            console.error(error);
+        }
+    };
+
+    // ✅ Kaydet → Supabase upload
+    const saveImage = async () => {
+        if (!tempImage || !currentChild) return;
+        try {
+            setLoading(true);
+
+            const childId = currentChild.id;
+            const filePath = `avatars/${childId}.jpg`;
+
+            // ✅ base64 oku
+            const file = await FileSystem.readAsStringAsync(tempImage, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
+            // ✅ base64 string → ArrayBuffer
+            const fileData = decode(file);
+
+            // ✅ Supabase'e yükle
+            const { error: uploadError } = await supabase.storage
+                .from("avatars")
+                .upload(filePath, fileData, {
+                    contentType: "image/jpeg",
+                    upsert: true,
+                });
+
+            if (uploadError) throw uploadError;
+
+            // ✅ Public URL al
+            const { data: publicUrlData } = supabase.storage
+                .from("avatars")
+                .getPublicUrl(filePath);
+
+            const avatarUrl = publicUrlData.publicUrl;
+
+            // ✅ DB güncelle
+            await supabase
+                .from("children")
+                .update({ avatar: avatarUrl })
+                .eq("id", childId);
+
+            // ✅ State güncelle
+            setCurrentChild({ ...currentChild, avatar: avatarUrl });
+            setPreviewVisible(false);
+            setTempImage(null);
+
+            Alert.alert("Başarılı", "Profil resmi kaydedildi ✅");
+        } catch (error) {
+            Alert.alert("Hata", "Resim yüklenirken hata oluştu");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ Bilgi Kaydet
+    const saveEdit = async () => {
+        try {
+            const { error } = await supabase
+                .from("children")
+                .update(formValues)
+                .eq("id", currentChild.id);
+
+            if (error) throw error;
+
+            setCurrentChild({ ...currentChild, ...formValues });
+            setEditModalVisible(false);
+            Alert.alert("Başarılı", "Bilgiler güncellendi ✅");
+        } catch (error) {
+            Alert.alert("Hata", "Bilgiler güncellenirken hata oluştu");
+            console.error(error);
+        }
+    };
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
             {/* 📌 Header */}
@@ -124,16 +187,25 @@ export default function ProfileScreen() {
             </View>
 
             {/* 📌 İçerik */}
-            <ScrollView contentContainerStyle={{padding:16, paddingBottom: 30 }}>
+            <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
                 {/* 👤 Çocuk Bilgileri Kartı */}
                 <View style={[commonStyles.card, { marginTop: 20 }]}>
                     <View style={{ alignItems: "center" }}>
-                        <TouchableOpacity onPress={pickImage}>
-                            <Image
-                                source={{ uri: currentChild.avatar || "https://placehold.co/100" }}
-                                style={commonStyles.avatar}
-                            />
+                        <TouchableOpacity onPress={pickImage} disabled={loading}>
+                            {currentChild.avatar ? (
+                                <Image
+                                    source={{ uri: currentChild.avatar }}
+                                    style={commonStyles.avatar}
+                                />
+                            ) : (
+                                <View
+                                    style={[commonStyles.avatar, commonStyles.placeholder]}
+                                >
+                                    <Text style={{ color: "#555" }}>📷 Resim Ekle</Text>
+                                </View>
+                            )}
                         </TouchableOpacity>
+
                         <Text style={commonStyles.name}>{currentChild.name}</Text>
                     </View>
 
@@ -199,7 +271,48 @@ export default function ProfileScreen() {
                 </View>
             </ScrollView>
 
-            {/* Düzenleme Modal */}
+            {/* ✅ Resim Önizleme Modal */}
+            <Modal visible={previewVisible} transparent animationType="fade">
+                <View style={commonStyles.modalOverlay}>
+                    <View style={commonStyles.modalContent}>
+                        {tempImage && (
+                            <Image
+                                source={{ uri: tempImage }}
+                                style={{
+                                    width: 200,
+                                    height: 200,
+                                    borderRadius: 100,
+                                    alignSelf: "center",
+                                    marginBottom: 20,
+                                }}
+                            />
+                        )}
+
+                        <View style={commonStyles.modalButtons}>
+                            <TouchableOpacity
+                                style={[commonStyles.modalButton, commonStyles.cancelButton]}
+                                onPress={() => {
+                                    setPreviewVisible(false);
+                                    setTempImage(null);
+                                }}
+                            >
+                                <Text style={commonStyles.modalButtonText}>İptal</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[commonStyles.modalButton, commonStyles.saveButton]}
+                                onPress={saveImage}
+                                disabled={loading}
+                            >
+                                <Text style={commonStyles.modalButtonText}>
+                                    {loading ? "Kaydediliyor..." : "Kaydet"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* ✅ Bilgi Düzenleme Modal */}
             <Modal visible={editModalVisible} transparent animationType="slide">
                 <View style={commonStyles.modalOverlay}>
                     <View style={commonStyles.modalContent}>
