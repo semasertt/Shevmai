@@ -23,33 +23,31 @@ export default function CategoryPage() {
     }
 
     return (
-        <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
-            <Text style={styles.title}>{category}</Text>
-
-            {parsedRecords.length > 0 ? (
-                <FlatList
-                    data={parsedRecords}
-                    keyExtractor={(item, index) => String(item.id || index)}
-                    renderItem={({ item }) => (
-                        <View style={styles.recordItem}>
-                            <Text style={styles.recordTitle}>{item.title}</Text>
-                            {item.advice ? (
-                                <Text style={styles.recordText}>{item.advice}</Text>
-                            ) : null}
-                            {item.image_url ? (
-                                <Image
-                                    source={{ uri: item.image_url }}
-                                    style={styles.recordImage}
-                                    resizeMode="cover"
-                                />
-                            ) : null}
-                        </View>
-                    )}
-                />
-            ) : (
-                <Text style={styles.empty}>Henüz kayıt yok</Text>
+        <FlatList
+            data={parsedRecords}
+            keyExtractor={(item, index) => String(item.id || index)}
+            ListHeaderComponent={
+                <Text style={styles.title}>{category}</Text>
+            }
+            renderItem={({ item }) => (
+                <View style={styles.recordItem}>
+                    <Text style={styles.recordTitle}>{item.title}</Text>
+                    {item.advice ? <Text style={styles.recordText}>{item.advice}</Text> : null}
+                    {item.image_url ? (
+                        <Image
+                            source={{ uri: item.image_url }}
+                            style={styles.recordImage}
+                            resizeMode="cover"
+                        />
+                    ) : null}
+                </View>
             )}
-        </ScrollView>
+            ListEmptyComponent={
+                <Text style={styles.empty}>Henüz kayıt yok</Text>
+            }
+            contentContainerStyle={{ paddingBottom: 30 }}
+        />
+
     );
 }
 
