@@ -1,9 +1,9 @@
-import { StyleSheet } from "react-native";
+import { Platform, StatusBar, StyleSheet } from "react-native";
 
 export const commonStyles = StyleSheet.create({
     // GENEL
     container: { flex: 1, backgroundColor: "#fff", padding: 24, paddingBottom: 32 },
-    page: { flex: 1, backgroundColor: "#fff", padding: 16, paddingBottom: 32 },
+    page: { flex: 1, backgroundColor: "#fff", paddingBottom: 32 },
     sectionTitle: { color: "#5c4033", fontSize: 18, fontWeight: "700", marginBottom: 10 },
 
     // ONBOARDING
@@ -103,18 +103,34 @@ export const commonStyles = StyleSheet.create({
         alignSelf: "flex-start",
     },
     editBtnText: { color: "#fff", marginLeft: 6, fontWeight: "600" },
-
-    // HEADER
+    safeArea: {
+        backgroundColor: "#fff",
+    },
     header: {
+        width: "100%",
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: 16,
-        padding: 15,
-        paddingTop: 30,
-        backgroundColor: "#fffaf5", // biraz daha açık
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+        backgroundColor: "#f0e4d7", // biraz daha koyu krem
+
     },
-    headerTitle: { color: "#5c4033", fontSize: 20, fontWeight: "700" },
+    headerTitle: {
+        color: "#5c4033",
+        fontSize: 20,
+        fontWeight: "700",
+        textAlign: "center",
+        flex: 1,
+    },
+    headerIconLeft: {
+        paddingLeft: 12,
+    },
+
+    headerIconRight: {
+        paddingRight: 12,
+    },
+
 
     // CARD
     card: {
@@ -178,16 +194,25 @@ export const commonStyles = StyleSheet.create({
         backgroundColor: "#fff",
         alignItems: "center",
     },
+
+    // HOME TAKVİM (calendarWrap'i buraya taşıyoruz)
+    calendarWrap: {
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        marginHorizontal: 16,
+        padding: 8,
+        elevation: 3,
+    },
     inputChat: {
         flex: 1,
         borderWidth: 1,
         borderColor: "#d1d5db",
         borderRadius: 20,
         paddingHorizontal: 15,
-        paddingVertical: 8,
+        paddingVertical: 10,
         fontSize: 16,
         color: "#111827",
-        maxHeight: 100,
+        maxHeight: 120,
         backgroundColor: "#fff",
     },
     sendButton: {
@@ -265,15 +290,6 @@ export const commonStyles = StyleSheet.create({
         marginTop: 40,
         color: "#9ca3af",
         fontSize: 14,
-    },
-
-    // HOME TAKVIM
-    calendarWrap: {
-        backgroundColor: "#fff",
-        borderRadius: 16,
-        marginHorizontal: 16,
-        padding: 8,
-        elevation: 3,
     },
 
     // SIGN UP EKSTRA

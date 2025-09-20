@@ -13,6 +13,8 @@ import CardButton from "../../components/ui/CardButton";
 import Timeline from "@/components/ui/TimelineCalender";
 import { useRouter } from "expo-router";
 import { commonStyles } from "@/src/styles/common";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 const DEFAULT_CATEGORIES = [
     { id: "disease", title: "🤒 Hastalık" },
@@ -38,11 +40,11 @@ export default function HomeScreen() {
         const childId = await getSelectedChild();
         if (!childId) return;
 
-        const { data, error } = await supabase
+        const {data, error} = await supabase
             .from("health_events")
             .select("*")
             .eq("child_id", childId)
-            .order("created_at", { ascending: false });
+            .order("created_at", {ascending: false});
 
         if (!error && data) {
             setRecords(data);
@@ -94,36 +96,40 @@ export default function HomeScreen() {
     };
 
     return (
-        <ScrollView style={commonStyles.page} contentContainerStyle={{ paddingBottom: 30 }}>
-            {/* 📌 Kategoriler */}
-            <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Kategoriler</Text>
-            <FlatList
-                data={DEFAULT_CATEGORIES}
-                horizontal
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <CardButton
-                        title={item.title}
-                        records={recordsByCategory[item.title] || []}
-                        onPress={() => handleCategoryPress(item.title)}
-                    />
-                )}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-            />
-            {/* 📌 Son Kayıtlar */}
-            <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Son Kayıtlar</Text>
-            <Timeline items={records} />
-        </ScrollView>
+        <>
+            {/* 📌 Header */}
+            <SafeAreaView style={commonStyles.safeArea}>
+                <View style={commonStyles.header}>
+                    <Text style={commonStyles.headerTitle}>Anasayfa</Text>
+                </View>
+            </SafeAreaView>
+
+            {/* 📌 İçerik */}
+            <ScrollView
+                style={commonStyles.page}
+                contentContainerStyle={{padding: 16, paddingBottom: 30}}
+            >
+                {/* 📌 Kategoriler */}
+                <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Kategoriler</Text>
+                <FlatList
+                    data={DEFAULT_CATEGORIES}
+                    horizontal
+                    keyExtractor={(item) => item.id}
+                    renderItem={({item}) => (
+                        <CardButton
+                            title={item.title}
+                            records={recordsByCategory[item.title] || []}
+                            onPress={() => handleCategoryPress(item.title)}
+                        />
+                    )}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{paddingHorizontal: 16}}
+                />
+
+                {/* 📌 Son Kayıtlar */}
+                <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Son Kayıtlar</Text>
+                <Timeline items={records}/>
+            </ScrollView>
+        </>
     );
 }
-
-const localStyles = StyleSheet.create({
-    calendarWrap: {
-        backgroundColor: "#fff",
-        borderRadius: 16,
-        marginHorizontal: 16,
-        padding: 8,
-        elevation: 3,
-    },
-});

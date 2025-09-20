@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { fetchChildren, deleteChild } from "@/services/children";
 import { commonStyles } from "@/src/styles/common";
+import { Platform, BackHandler } from "react-native";
 
 export default function SettingsScreen() {
     const [children, setChildren] = useState<any[]>([]);
@@ -56,6 +57,9 @@ export default function SettingsScreen() {
                 onPress={async () => {
                     await supabase.auth.signOut();
                     router.replace("/(auth)/sign-in");
+                    if (Platform.OS === "android") {
+                        BackHandler.exitApp();
+                    }
                 }}
             >
                 <Ionicons name="log-out-outline" size={20} color="#fff" />
