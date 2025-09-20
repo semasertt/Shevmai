@@ -29,6 +29,7 @@ import {supabase} from "@/lib/supabase";
 import {addFollowUpToEvent} from "@/src/api/saveHealthEvent";
 import {getCurrentChildWithDetails} from "@/services/children";
 import {makeBasePrompt, makeFollowupPrompt} from "@/src/prompts";
+import {commonStyles} from "app/styles/common";
 
 
 
@@ -360,16 +361,16 @@ export default function Chatbot() {
     };
     return (
         <KeyboardAvoidingView
-            style={styles.container}
+            style={commonStyles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={Platform.OS === "ios" ? 140 : 180}
         >
             {/* Header */}
-            <View style={styles.header}>
+            <View style={commonStyles.header}>
                 <TouchableOpacity onPress={() => setShowSidebar(true)}>
                     <Ionicons name="menu" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>ShevmAI</Text>
+                <Text style={commonStyles.headerTitle}>ShevmAI</Text>
                 <TouchableOpacity onPress={startNewConversation}>
                     <Ionicons name="add-circle" size={26} color="#fff" />
                 </TouchableOpacity>
@@ -381,11 +382,11 @@ export default function Chatbot() {
                 data={messages}
                 renderItem={({ item }) => <ChatMessage item={item} />}
                 keyExtractor={(_, index) => index.toString()}
-                contentContainerStyle={styles.chatContainer}
+                contentContainerStyle={commonStyles.chatContainer}
             />
 
             {/* Input */}
-            <View style={styles.inputContainer}>
+            <View style={commonStyles.inputContainer}>
                 <TouchableOpacity onPress={handleGallery}>
                     <Ionicons name="image-outline" size={26} color="#60a5fa" style={{ marginRight: 10 }} />
                 </TouchableOpacity>
@@ -393,22 +394,22 @@ export default function Chatbot() {
                     <Ionicons name="camera-outline" size={26} color="#60a5fa" style={{ marginRight: 10 }} />
                 </TouchableOpacity>
                 <TextInput
-                    style={styles.input}
+                    style={commonStyles.input}
                     placeholder="Bir şeyler yaz..."
                     placeholderTextColor="#94a3b8"
                     value={prompt}
                     onChangeText={setPrompt}
                     multiline
                 />
-                <TouchableOpacity style={styles.sendButton} onPress={askGemini} disabled={loading}>
-                    <Text style={styles.sendButtonText}>{loading ? "..." : "➤"}</Text>
+                <TouchableOpacity style={commonStyles.sendButton} onPress={askGemini} disabled={loading}>
+                    <Text style={commonStyles.sendButtonText}>{loading ? "..." : "➤"}</Text>
                 </TouchableOpacity>
             </View>
 
             {/* Sidebar */}
             <Modal visible={showSidebar} animationType="slide" transparent>
-                <View style={styles.sidebarOverlay}>
-                    <View style={styles.sidebarContainer}>
+                <View style={commonStyles.sidebarOverlay}>
+                    <View style={commonStyles.sidebarContainer}>
                         <Sidebar
                             conversations={conversations}
                             onSelect={(conv: any) => {
@@ -425,50 +426,3 @@ export default function Chatbot() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#0f172a" },
-    header: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: 15,
-        backgroundColor: "#1e293b",
-    },
-    headerTitle: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-    chatContainer: { padding: 10, flexGrow: 1, justifyContent: "flex-end" },
-    inputContainer: {
-        flexDirection: "row",
-        padding: 10,
-        borderTopWidth: 1,
-        borderColor: "#1e293b",
-        backgroundColor: "#0f172a",
-        alignItems: "center",
-    },
-    input: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: "#475569",
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        fontSize: 16,
-        color: "#fff",
-        maxHeight: 100,
-    },
-    sendButton: {
-        marginLeft: 10,
-        backgroundColor: "#2563eb",
-        borderRadius: 20,
-        padding: 10,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    sendButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-    sidebarOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        alignItems: "flex-start",
-        justifyContent: "flex-start",
-    },
-    sidebarContainer: { marginTop: 60, height: "80%" },
-});
