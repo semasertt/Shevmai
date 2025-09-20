@@ -17,6 +17,29 @@ export async function askGeminiAPI(text: string, prompt: string) {
 
     return data?.candidates?.[0]?.content?.parts?.[0]?.text || "❌ Cevap alınamadı.";
 }
+export async function analyzeText(prompt: string): Promise<string> {
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [{ text: prompt }],
+                    },
+                ],
+            }),
+        });
+
+        const data = await res.json();
+        console.log("🔍 analyzeText raw:", JSON.stringify(data, null, 2));
+
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || "❌ Yanıt alınamadı.";
+    } catch (err) {
+        console.error("❌ analyzeText error:", err);
+        return "❌ API hatası oluştu.";
+    }
+}
 
 export async function analyzeImage(base64: string, context: string, prompt?: string) {
     try {

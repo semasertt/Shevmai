@@ -1,31 +1,51 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { getCurrentChildWithDetails } from "@/services/children";
-
-function calculateAgeMonths(birthdate?: string): number {
-    if (!birthdate) return 0;
-    const today = new Date();
-    const birth = new Date(birthdate);
-    return (today.getFullYear() - birth.getFullYear()) * 12 + (today.getMonth() - birth.getMonth());
-}
-
-// Basit gelişim/atak dönemleri tablosu
-const ATTACK_PERIODS: Record<number, string[]> = {
-    4: ["4. ay büyüme atağı", "Uyku düzensizliği olabilir"],
-    8: ["Diş çıkarma atağı", "Huzursuzluk görülebilir"],
-    18: ["2 yaş sendromu başlangıcı"],
-    36: ["Dil gelişimi hızlanır, davranışsal ataklar olabilir"],
-};
+import { analyzeText } from "@/src/api/gemini";
+import { ATTACK_PROMPT } from "@/src/prompts";
 
 export function AttackPeriodsView() {
     const [child, setChild] = useState<any>(null);
-    const [ageMonths, setAgeMonths] = useState(0);
+    const [periods, setPeriods] = useState<any[]>([]);
+    const [summary, setSummary] = useState<string>("");
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         (async () => {
             const c = await getCurrentChildWithDetails();
             setChild(c);
-            setAgeMonths(calculateAgeMonths(c?.birthdate));
+
+            if (c?.birthdate) {
+                const birth = new Date(c.birthdate);
+                const today = new Date();
+                const ageMonths =
+                    (today.getFullYear() - birth.getFullYear()) * 12 +
+                    (today.getMonth() - birth.getMonth());
+
+                try {
+                    const prompt = ATTACK_PROMPT(c.name, ageMonths);
+                    const aiResult = await analyzeText(prompt);
+
+                    const clean = aiResult.replace(/```json|```/g, "").trim();
+                    const parsed = JSON.parse(clean);
+
+// 🔹 Sıralama ekle: şu anda > yaklaşan > geçildi
+                    const sorted = (parsed.periods || []).sort((a: any, b: any) => {
+                        const order: Record<string, number> = {
+                            "şu anda": 0,
+                            "yaklaşan": 1,
+                            "geçildi": 2,
+                        };
+                        return (order[a.status] ?? 99) - (order[b.status] ?? 99);
+                    });
+
+                    setSummary(parsed.summary || "");
+                    setPeriods(sorted);
+                } catch (err) {
+                    console.error("❌ Attack API hatası:", err);
+                }
+            }
+            setLoading(false);
         })();
     }, []);
 
@@ -38,33 +58,80 @@ export function AttackPeriodsView() {
         );
     }
 
+    if (loading) {
+        return (
+            <View style={styles.page}>
+                <ActivityIndicator size="large" color="#3b82f6" />
+            </View>
+        );
+    }
+
     return (
-        <View style={styles.page}>
+        <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             <Text style={styles.title}>⚡ {child.name} için Atak Dönemleri</Text>
-            {Object.entries(ATTACK_PERIODS).map(([month, periods]) => {
-                const m = parseInt(month);
-                const status = ageMonths >= m ? "📌 Geçmiş" : "🔔 Yaklaşan";
-                return (
-                    <View key={month} style={styles.item}>
-                        <Text style={styles.month}>{m}. ay</Text>
-                        <Text style={styles.periods}>{periods.join(", ")}</Text>
-                        <Text style={styles.status}>{status}</Text>
-                    </View>
-                );
-            })}
-        </View>
+
+            {/* 🔹 Özet Kartı */}
+            {summary ? (
+                <View style={styles.summaryCard}>
+                    <Text style={styles.summaryTitle}>📌 Genel Özet</Text>
+                    <Text style={styles.summaryText}>{summary}</Text>
+                </View>
+            ) : null}
+
+            {/* 🔹 Atak Listesi */}
+            {periods.length > 0 ? (
+                periods.map((p, idx) => {
+                    let cardStyle = styles.futureCard;
+                    if (p.status === "geçildi") cardStyle = styles.pastCard;
+                    if (p.status === "şu anda") cardStyle = styles.currentCard;
+
+                    return (
+                        <View key={idx} style={[styles.periodCard, cardStyle]}>
+                            <Text style={styles.periodTitle}>
+                                {p.status === "geçildi" ? "✅ " : p.status === "şu anda" ? "🔥 " : "⏳ "}
+                                {p.title}
+                            </Text>
+                            <Text style={styles.periodDesc}>{p.description}</Text>
+                            <Text style={styles.periodStatus}>Durum: {p.status}</Text>
+                        </View>
+                    );
+                })
+            ) : (
+                <Text>Atak dönemi bilgisi bulunamadı</Text>
+            )}
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    page: { flex: 1, padding: 16, backgroundColor: "#fff" },
-    title: { fontSize: 20, fontWeight: "700", marginBottom: 16 },
-    item: {
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderColor: "#eee",
+    page: { flex: 1, padding: 16, backgroundColor: "#0f172a" },
+    title: {
+        fontSize: 24,              // 🔹 Daha büyük
+        fontWeight: "800",         // 🔹 Daha kalın
+        marginBottom: 20,
+        color: "#facc15",          // 🔹 Sarı (arka planda çok dikkat çeker)
+        textAlign: "center"        // 🔹 Ortalayıp daha güçlü görünüm
     },
-    month: { fontSize: 16, fontWeight: "600" },
-    periods: { fontSize: 14, color: "#444", marginTop: 4 },
-    status: { fontSize: 13, marginTop: 4, color: "#3b82f6" },
+
+    summaryCard: {
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 20,
+    },
+    summaryTitle: { color: "#93c5fd", fontSize: 16, fontWeight: "600", marginBottom: 6 },
+    summaryText: { color: "#e0f2fe", fontSize: 14, lineHeight: 20 },
+
+    periodCard: {
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 12,
+    },
+    periodTitle: { fontSize: 16, fontWeight: "600", marginBottom: 6, color: "#fff" },
+    periodDesc: { fontSize: 14, color: "#e5e7eb" },
+    periodStatus: { fontSize: 12, marginTop: 6, fontStyle: "italic", color: "#cbd5e1" },
+
+    // 🔹 Duruma göre renkler
+    pastCard: { backgroundColor: "#334155" }, // Gri ton: geçmiş
+    currentCard: { backgroundColor: "#166534" }, // Yeşil ton: şu anda
+    futureCard: { backgroundColor: "#1e3a8a" }, // Mavi ton: yaklaşan
 });
