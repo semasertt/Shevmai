@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
-import { commonStyles } from "app/styles/common";
+import { commonStyles } from "@/src/styles/common";
 
 async function resolveEmail(identity: string): Promise<string | null> {
     if (identity.includes("@")) return identity;
@@ -41,7 +41,7 @@ export default function SignIn() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return Alert.alert("Giriş Hatası", error.message);
 
-        router.replace("/onboarding");
+        router.replace("/home");
     };
 
     return (

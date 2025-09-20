@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import {View, Text, StyleSheet, FlatList, Image} from "react-native";
-import {commonStyles} from "@/app/styles/common";
+import {commonStyles} from "@/src/styles/common";
 
 export default function CategoryPage() {
     const { category, records } = useLocalSearchParams<{ category: string; records?: string }>();

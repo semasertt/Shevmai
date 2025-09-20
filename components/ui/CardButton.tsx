@@ -1,11 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, ViewStyle, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, ViewStyle, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 interface Props {
     title: string;
     subtitle?: string;
-    variant?: 'default' | 'full';
+    variant?: "default" | "full";
     records?: any[];
     categoryId?: string;
     onPress?: () => void;
@@ -15,29 +15,21 @@ interface Props {
 export default function CardButton({
                                        title,
                                        subtitle,
-                                       variant = 'default',
+                                       variant = "default",
                                        records = [],
                                        categoryId,
                                        onPress,
-                                       style
+                                       style,
                                    }: Props) {
-
-    const containerStyle = variant === 'full' ? styles.fullContainer : styles.container;
+    const containerStyle = variant === "full" ? styles.fullContainer : styles.container;
 
     return (
-        <TouchableOpacity
-            style={[containerStyle, style]}
-            onPress={onPress}
-        >
-            {/* ✅ Arkaplan süs daireleri - Sadece default variant için */}
-            {variant === 'default' && (
+        <TouchableOpacity style={[containerStyle, style]} onPress={onPress}>
+            {/* Daha belirgin yarım daire gölgeler */}
+            {variant === "default" && (
                 <>
-                    <View
-                        style={[styles.circle, { backgroundColor: "#312e81", top: -50, right: -30 }]}
-                    />
-                    <View
-                        style={[styles.circle, { backgroundColor: "#4f46e5", top: -80, right: -40 }]}
-                    />
+                    <View style={[styles.circle, { top: -60, right: -30 }]} />
+                    <View style={[styles.circle, { top: -80, right: -40 }]} />
                 </>
             )}
 
@@ -49,10 +41,9 @@ export default function CardButton({
                 )}
             </View>
 
-            {/* ✅ Menü butonu - Sadece default variant için */}
-            {variant === 'default' && (
+            {variant === "default" && (
                 <View style={styles.menuBtn}>
-                    <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
+                    <Ionicons name="ellipsis-horizontal" size={20} color="#5c4033" />
                 </View>
             )}
         </TouchableOpacity>
@@ -61,56 +52,60 @@ export default function CardButton({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#1e3a8a',
+        backgroundColor: "#f5ede3",
         padding: 16,
         borderRadius: 16,
         marginRight: 12,
+        marginBottom: 20, // ✅ altta boşluk
         width: 140,
         height: 120,
-        justifyContent: 'center',
+        justifyContent: "center",
         overflow: "hidden",
         position: "relative",
-        // Gölge efekti
         shadowColor: "#000",
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 6,
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 3,
     },
     fullContainer: {
-        backgroundColor: '#1e293b',
+        backgroundColor: "#fffaf5",
         padding: 16,
         borderRadius: 12,
-        marginVertical: 4,
+        marginVertical: 8,
     },
     title: {
-        color: '#fff',
+        color: "#5c4033",
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: "600",
         marginBottom: 4,
     },
     subtitle: {
-        color: '#c7d2fe',
+        color: "#6b7280",
         fontSize: 14,
     },
     count: {
-        color: '#60a5fa',
+        color: "#b47e5d",
         fontSize: 12,
         marginTop: 8,
-    },
-    // ✅ Yeni eklenen stiller
-    circle: {
-        position: "absolute",
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        opacity: 0.25,
-        zIndex: 1,
     },
     menuBtn: {
         position: "absolute",
         top: 10,
         right: 10,
-        zIndex: 3
+        zIndex: 3,
+    },
+    circle: {
+        position: "absolute",
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: "#e0d6c8", // ✅ koyu krem
+        opacity: 0.6,               // ✅ daha görünür
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        zIndex: 1,
     },
 });

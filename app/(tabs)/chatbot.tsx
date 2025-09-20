@@ -29,7 +29,7 @@ import {supabase} from "@/lib/supabase";
 import {addFollowUpToEvent} from "@/src/api/saveHealthEvent";
 import {getCurrentChildWithDetails} from "@/services/children";
 import {makeBasePrompt, makeFollowupPrompt} from "@/src/prompts";
-import {commonStyles} from "app/styles/common";
+import {commonStyles} from "@/src/styles/common";
 
 
 

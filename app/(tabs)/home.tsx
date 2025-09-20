@@ -10,8 +10,9 @@ import { Calendar } from "react-native-calendars";
 import { supabase } from "@/lib/supabase";
 import { getSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
+import Timeline from "@/components/ui/TimelineCalender";
 import { useRouter } from "expo-router";
-import { commonStyles } from "app/styles/common";
+import { commonStyles } from "@/src/styles/common";
 
 const DEFAULT_CATEGORIES = [
     { id: "disease", title: "🤒 Hastalık" },
@@ -95,7 +96,7 @@ export default function HomeScreen() {
     return (
         <ScrollView style={commonStyles.page} contentContainerStyle={{ paddingBottom: 30 }}>
             {/* 📌 Kategoriler */}
-            <Text style={commonStyles.sectionTitle}>Kategoriler</Text>
+            <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Kategoriler</Text>
             <FlatList
                 data={DEFAULT_CATEGORIES}
                 horizontal
@@ -110,29 +111,9 @@ export default function HomeScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingHorizontal: 16 }}
             />
-
-            {/* 📌 Takvim */}
-            <Text style={commonStyles.sectionTitle}>Takvim</Text>
-            <View style={localStyles.calendarWrap}>
-                <Calendar
-                    current={new Date().toISOString().slice(0, 10)}
-                    markedDates={records.reduce((acc, r) => {
-                        const date = r.created_at.slice(0, 10);
-                        acc[date] = { marked: true, dotColor: "#3b82f6" };
-                        return acc;
-                    }, {} as any)}
-                    theme={{
-                        backgroundColor: "#fff",
-                        calendarBackground: "#fff",
-                        selectedDayBackgroundColor: "#3b82f6",
-                        selectedDayTextColor: "#fff",
-                        todayTextColor: "#3b82f6",
-                        arrowColor: "#3b82f6",
-                        monthTextColor: "#111827",
-                    }}
-                />
-            </View>
-
+            {/* 📌 Son Kayıtlar */}
+            <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Son Kayıtlar</Text>
+            <Timeline items={records} />
         </ScrollView>
     );
 }

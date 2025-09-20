@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { fetchChildren, deleteChild } from "@/services/children";
-import { commonStyles } from "@/app/styles/common";
+import { commonStyles } from "@/src/styles/common";
 
 export default function SettingsScreen() {
     const [children, setChildren] = useState<any[]>([]);

@@ -15,7 +15,7 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
-import { commonStyles } from "app/styles/common";
+import { commonStyles } from "@/src/styles/common";
 
 export default function AddChildScreen() {
     const [childName, setChildName] = useState("");
@@ -64,7 +64,6 @@ export default function AddChildScreen() {
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: "#0f172a" }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={80} // header varsa değerle oynayabilirsin
         >
