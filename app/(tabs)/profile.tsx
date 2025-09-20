@@ -25,23 +25,35 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         const loadChild = async () => {
-            const childId = await getSelectedChild();
-            if (!childId) return;
+            const { data: userData } = await supabase.auth.getUser();
+            const user = userData?.user;
+            if (!user) return;
 
-            const { data, error } = await supabase
-                .from("children")
-                .select("*")
-                .eq("id", childId)
+            // Kullanıcının profilinden selected_child_id getir
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("selected_child_id")
+                .eq("id", user.id)
                 .single();
 
-            if (!error && data) {
-                setCurrentChild(data);
-                setFormValues(data);
+            if (!profile?.selected_child_id) return;
+
+            // Seçili çocuğu yükle
+            const { data: child, error } = await supabase
+                .from("children")
+                .select("*")
+                .eq("id", profile.selected_child_id)
+                .single();
+
+            if (!error && child) {
+                setCurrentChild(child);
+                setFormValues(child);
             }
         };
 
         loadChild();
     }, []);
+
 
     const pickImage = async () => {
         try {
