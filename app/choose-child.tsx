@@ -10,7 +10,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
-import {commonStyles} from "@/app/styles/common";
+import {commonStyles} from "@/src/styles/common";
 
 export default function ChooseChildScreen() {
     const [children, setChildren] = useState<any[]>([]);

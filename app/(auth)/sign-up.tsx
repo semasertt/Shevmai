@@ -14,7 +14,7 @@ import {
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { commonStyles } from "app/styles/common";
+import { commonStyles } from "@/src/styles/common";
 
 export default function SignUp() {
     const [username, setUsername] = useState("");

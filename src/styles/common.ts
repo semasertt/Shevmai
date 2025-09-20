@@ -2,26 +2,26 @@ import { StyleSheet } from "react-native";
 
 export const commonStyles = StyleSheet.create({
     // GENEL
-    container: { flex: 1, backgroundColor: "#0b1020", padding: 24 },
-    page: { flex: 1, backgroundColor: "#0f172a", padding: 16 },
-    sectionTitle: { color: "#fff", fontSize: 18, fontWeight: "700", marginBottom: 10 },
+    container: { flex: 1, backgroundColor: "#fff", padding: 24 },
+    page: { flex: 1, backgroundColor: "#fff", padding: 16 },
+    sectionTitle: { color: "#5c4033", fontSize: 18, fontWeight: "700", marginBottom: 10 },
 
     // ONBOARDING
     onboardingContainer: {
         flex: 1,
-        backgroundColor: "#0b1020",
+        backgroundColor: "#fff",
         padding: 24,
         gap: 16,
         justifyContent: "center",
     },
     onboardingTitle: {
-        color: "#fff",
+        color: "#5c4033",
         fontSize: 26,
         fontWeight: "800",
         textAlign: "center",
     },
     onboardingDesc: {
-        color: "#cbd5e1",
+        color: "#6b7280",
         fontSize: 16,
         textAlign: "center",
         marginBottom: 8,
@@ -33,7 +33,7 @@ export const commonStyles = StyleSheet.create({
         fontWeight: "800",
         textAlign: "center",
         marginBottom: 16,
-        color: "#fff",
+        color: "#5c4033",
     },
     authContainer: {
         flex: 1,
@@ -43,7 +43,7 @@ export const commonStyles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "#cbd5e1",
+        borderColor: "#d1d5db",
         padding: 12,
         borderRadius: 10,
         marginBottom: 12,
@@ -51,16 +51,16 @@ export const commonStyles = StyleSheet.create({
         color: "#111827",
     },
     authButton: {
-        backgroundColor: "#2563eb",
+        backgroundColor: "#b47e5d",
         padding: 14,
         borderRadius: 12,
     },
     authButtonText: { textAlign: "center", fontWeight: "700", color: "#fff" },
-    authLink: { textAlign: "center", color: "#fff" },
+    authLink: { textAlign: "center", color: "#5c4033" },
 
     // BUTONLAR
     btnPrimary: {
-        backgroundColor: "#3b82f6",
+        backgroundColor: "#b47e5d",
         paddingVertical: 14,
         borderRadius: 14,
         alignItems: "center",
@@ -68,14 +68,14 @@ export const commonStyles = StyleSheet.create({
     btnPrimaryText: { color: "#fff", fontWeight: "700", fontSize: 16 },
     btnOutline: {
         borderWidth: 2,
-        borderColor: "#3b82f6",
+        borderColor: "#b47e5d",
         borderRadius: 14,
         paddingVertical: 14,
         alignItems: "center",
     },
-    btnOutlineText: { color: "#3b82f6", fontWeight: "700", fontSize: 16 },
+    btnOutlineText: { color: "#b47e5d", fontWeight: "700", fontSize: 16 },
     btnDark: {
-        backgroundColor: "#111827",
+        backgroundColor: "#5c4033",
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderRadius: 12,
@@ -96,7 +96,7 @@ export const commonStyles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#4f46e5",
+        backgroundColor: "#b47e5d",
         padding: 10,
         borderRadius: 8,
         marginTop: 12,
@@ -111,19 +111,20 @@ export const commonStyles = StyleSheet.create({
         alignItems: "center",
         marginBottom: 16,
         padding: 15,
-        backgroundColor: "#1e293b",
+        paddingTop: 30,
+        backgroundColor: "#f5ede3",
     },
-    headerTitle: { color: "#fff", fontSize: 20, fontWeight: "700" },
+    headerTitle: { color: "#5c4033", fontSize: 20, fontWeight: "700" },
 
     // CARD
     card: {
-        backgroundColor: "#1e293b",
+        backgroundColor: "#f5ede3",
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
     },
     cardLight: {
-        backgroundColor: "#f8fafc",
+        backgroundColor: "#fffaf5",
         borderRadius: 12,
         padding: 12,
         marginBottom: 16,
@@ -133,26 +134,26 @@ export const commonStyles = StyleSheet.create({
         height: 100,
         borderRadius: 50,
         borderWidth: 3,
-        borderColor: "#4f46e5",
+        borderColor: "#d4af37",
         marginBottom: 12,
     },
-    name: { fontSize: 20, fontWeight: "700", color: "#fff", marginBottom: 8 },
-    detail: { fontSize: 14, color: "#c7d2fe", marginTop: 4 },
+    name: { fontSize: 20, fontWeight: "700", color: "#5c4033", marginBottom: 8 },
+    detail: { fontSize: 14, color: "#6b7280", marginTop: 4 },
 
     // CHILD CARD (choose-child)
     childCard: {
         padding: 16,
         borderRadius: 10,
-        backgroundColor: "#1e293b",
+        backgroundColor: "#f5ede3",
         marginBottom: 10,
     },
-    childName: { color: "#fff", fontSize: 16, fontWeight: "600" },
-    childDetail: { color: "#cbd5e1", fontSize: 14, marginTop: 4 },
+    childName: { color: "#5c4033", fontSize: 16, fontWeight: "600" },
+    childDetail: { color: "#6b7280", fontSize: 14, marginTop: 4 },
 
     // STAT CARDS
     statsGrid: { flexDirection: "row", justifyContent: "space-between" },
     statCard: {
-        backgroundColor: "#374151",
+        backgroundColor: "#f3e5d8",
         padding: 15,
         borderRadius: 10,
         alignItems: "center",
@@ -160,12 +161,12 @@ export const commonStyles = StyleSheet.create({
         marginHorizontal: 5,
     },
     statNumber: {
-        color: "#fff",
+        color: "#5c4033",
         fontSize: 20,
         fontWeight: "bold",
         marginVertical: 5,
     },
-    statLabel: { color: "#c7d2fe", fontSize: 12 },
+    statLabel: { color: "#6b7280", fontSize: 12 },
 
     // CHATBOT
     chatContainer: { padding: 10, flexGrow: 1, justifyContent: "flex-end" },
@@ -173,24 +174,25 @@ export const commonStyles = StyleSheet.create({
         flexDirection: "row",
         padding: 10,
         borderTopWidth: 1,
-        borderColor: "#1e293b",
-        backgroundColor: "#0f172a",
+        borderColor: "#e5e7eb",
+        backgroundColor: "#fff",
         alignItems: "center",
     },
     inputChat: {
         flex: 1,
         borderWidth: 1,
-        borderColor: "#475569",
+        borderColor: "#d1d5db",
         borderRadius: 20,
         paddingHorizontal: 15,
         paddingVertical: 8,
         fontSize: 16,
-        color: "#fff",
+        color: "#111827",
         maxHeight: 100,
+        backgroundColor: "#fff",
     },
     sendButton: {
         marginLeft: 10,
-        backgroundColor: "#2563eb",
+        backgroundColor: "#b47e5d",
         borderRadius: 20,
         padding: 10,
         justifyContent: "center",
@@ -206,9 +208,9 @@ export const commonStyles = StyleSheet.create({
     sidebarContainer: { marginTop: 60, height: "80%" },
 
     // FORM LABEL & COUNTERS
-    label: { marginBottom: 8, fontWeight: "bold", color: "#111827" },
+    label: { marginBottom: 8, fontWeight: "bold", color: "#5c4033" },
     counterRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
-    counterBtn: { backgroundColor: "#2563eb", padding: 10, borderRadius: 8 },
+    counterBtn: { backgroundColor: "#b47e5d", padding: 10, borderRadius: 8 },
     counterText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
 
     // SETTINGS
@@ -217,9 +219,9 @@ export const commonStyles = StyleSheet.create({
         alignItems: "center",
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: "#334155",
+        borderBottomColor: "#e5e7eb",
     },
-    settingText: { color: "#fff", marginLeft: 10, fontSize: 16 },
+    settingText: { color: "#5c4033", marginLeft: 10, fontSize: 16 },
     logoutBtn: {
         flexDirection: "row",
         alignItems: "center",
@@ -239,12 +241,12 @@ export const commonStyles = StyleSheet.create({
         alignItems: "center",
     },
     modalContent: {
-        backgroundColor: "#1e293b",
+        backgroundColor: "#fff",
         padding: 20,
         borderRadius: 15,
         width: "80%",
     },
-    modalTitle: { color: "#fff", fontSize: 18, fontWeight: "bold", marginBottom: 20 },
+    modalTitle: { color: "#5c4033", fontSize: 18, fontWeight: "bold", marginBottom: 20 },
     modalButtons: { flexDirection: "row", justifyContent: "space-between" },
     modalButton: {
         padding: 15,
@@ -253,8 +255,8 @@ export const commonStyles = StyleSheet.create({
         marginHorizontal: 5,
         alignItems: "center",
     },
-    cancelButton: { backgroundColor: "#6b7280" },
-    saveButton: { backgroundColor: "#4f46e5" },
+    cancelButton: { backgroundColor: "#d1d5db" },
+    saveButton: { backgroundColor: "#b47e5d" },
     modalButtonText: { color: "#fff", fontWeight: "bold" },
 
     // HOME TAKVIM
@@ -271,18 +273,18 @@ export const commonStyles = StyleSheet.create({
     genderBtn: {
         flex: 1,
         borderWidth: 1,
-        borderColor: "#6b7280",
+        borderColor: "#d1d5db",
         borderRadius: 8,
         padding: 10,
         alignItems: "center",
         marginHorizontal: 4,
         marginBottom: 8,
     },
-    genderBtnSelected: { backgroundColor: "#2563eb", borderColor: "#2563eb" },
+    genderBtnSelected: { backgroundColor: "#b47e5d", borderColor: "#b47e5d" },
     genderBtnText: { color: "#111827", fontWeight: "600" },
     genderBtnTextSelected: { color: "#fff" },
     submitBtn: {
-        backgroundColor: "#2563eb",
+        backgroundColor: "#b47e5d",
         padding: 14,
         borderRadius: 12,
         marginBottom: 20,
@@ -291,15 +293,15 @@ export const commonStyles = StyleSheet.create({
 
     // TITLE + DESC
     title: {
-        color: "#fff",
+        color: "#5c4033",
         fontSize: 24,
         fontWeight: "800",
         textAlign: "center",
         marginBottom: 12,
     },
-    desc: { color: "#cbd5e1", fontSize: 16 },
+    desc: { color: "#6b7280", fontSize: 16 },
     descCenter: {
-        color: "#cbd5e1",
+        color: "#6b7280",
         fontSize: 16,
         textAlign: "center",
         marginBottom: 8,
@@ -307,13 +309,25 @@ export const commonStyles = StyleSheet.create({
 
     // CATEGORY PAGE
     recordItem: {
-        backgroundColor: "#1e293b",
+        backgroundColor: "#f5ede3",
         padding: 12,
         borderRadius: 8,
         marginBottom: 12,
     },
-    recordTitle: { color: "#fff", fontSize: 16, fontWeight: "700", marginBottom: 6 },
-    recordText: { color: "#cbd5e1", fontSize: 14, marginBottom: 6 },
+    recordTitle: { color: "#5c4033", fontSize: 16, fontWeight: "700", marginBottom: 6 },
+    recordText: { color: "#6b7280", fontSize: 14, marginBottom: 6 },
     recordImage: { width: "100%", height: 180, borderRadius: 10, marginTop: 8 },
-    empty: { color: "#94a3b8", fontSize: 16, textAlign: "center", marginTop: 20 },
+    empty: { color: "#9ca3af", fontSize: 16, textAlign: "center", marginTop: 20 },
+
+    // NAVIGATION
+    tabBar: {
+        backgroundColor: "#f5ede3",  // ✅ doğru: nesne içinde string
+        height: 90,
+        borderTopWidth: 1,
+        borderTopColor: "#e5e7eb",
+    },
 });
+export const themeColors = {
+    tabBarActive: "#b47e5d",   // aktif ikon & yazı rengi
+    tabBarInactive: "#9ca3af", // pasif ikon & yazı rengi
+};
