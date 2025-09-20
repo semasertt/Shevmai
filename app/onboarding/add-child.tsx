@@ -1,23 +1,23 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
     TextInput,
     TouchableOpacity,
-    Alert,
-    ScrollView,
     StyleSheet,
-    Platform,
+    Alert,
     KeyboardAvoidingView,
     TouchableWithoutFeedback,
     Keyboard,
+    Platform,
+    ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 
-export default function AddChild() {
-    const [name, setName] = useState("");
+export default function AddChildScreen() {
+    const [childName, setChildName] = useState("");
     const [birthDate, setBirthDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [gender, setGender] = useState("");
@@ -28,76 +28,79 @@ export default function AddChild() {
     const [vaccines, setVaccines] = useState("");
     const [illnesses, setIllnesses] = useState("");
 
-    const onSave = async () => {
-        if (!name.trim()) return Alert.alert("Uyarı", "İsim zorunludur.");
+    const addChild = async () => {
+        if (!childName.trim()) {
+            return Alert.alert("Uyarı", "Çocuğun adı gerekli.");
+        }
 
-        try {
-            const { data: userData } = await supabase.auth.getUser();
-            if (!userData?.user) throw new Error("Giriş gerekli.");
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        if (!user) {
+            Alert.alert("Hata", "Kullanıcı bulunamadı");
+            return;
+        }
 
-            const { data, error } = await supabase
-                .from("children")
-                .insert({
-                    name,
-                    birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
-                    gender,
-                    height: height.toString(),
-                    weight: weight.toString(),
-                    sleep_pattern: sleepPattern,
-                    allergies,
-                    vaccines,
-                    illnesses,
-                    owner_user_id: userData.user.id,
-                })
-                .select()
-                .single();
+        const { error } = await supabase.from("children").insert({
+            parent_id: user.id,
+            name: childName,
+            birthdate: birthDate ? birthDate.toISOString().split("T")[0] : null,
+            gender,
+            height: height.toString(),
+            weight: weight.toString(),
+            sleep_pattern: sleepPattern,
+            allergies,
+            vaccines,
+            illnesses,
+        });
 
-            if (error) throw error;
-
-            Alert.alert("Başarılı", `${name} eklendi.`);
+        if (error) {
+            Alert.alert("Hata", error.message);
+        } else {
+            Alert.alert("Başarılı", "Çocuk eklendi");
             router.replace("/choose-child");
-        } catch (err: any) {
-            Alert.alert("Hata", err.message ?? "Kaydedilemedi.");
         }
     };
 
     return (
         <KeyboardAvoidingView
+            style={{ flex: 1, backgroundColor: "#0f172a" }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{ flex: 1 }}
+            keyboardVerticalOffset={80} // header varsa değerle oynayabilirsin
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <ScrollView style={styles.page} contentContainerStyle={{ paddingBottom: 40 }}>
-                    <Text style={styles.title}>👶 Yeni Çocuk Ekle</Text>
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1, padding: 20 }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Text style={styles.title}>Yeni Çocuk Ekle</Text>
 
-                    {/* İsim */}
+                    {/* Adı */}
                     <View style={styles.card}>
-                        <Text style={styles.label}>İsim *</Text>
                         <TextInput
-                            placeholder="Örn: Elif"
-                            value={name}
-                            onChangeText={setName}
+                            placeholder="Adı"
+                            value={childName}
+                            onChangeText={setChildName}
                             style={styles.input}
                             placeholderTextColor="#6b7280"
                         />
-                    </View>
 
-                    {/* Doğum Tarihi */}
-                    <View style={styles.card}>
+                        {/* Doğum Tarihi */}
                         <Text style={styles.label}>Doğum Tarihi</Text>
                         <TouchableOpacity
                             onPress={() => setShowDatePicker(true)}
                             style={styles.input}
                         >
                             <Text style={{ color: birthDate ? "#111827" : "#6b7280" }}>
-                                {birthDate ? birthDate.toLocaleDateString("tr-TR") : "Tarih Seçin"}
+                                {birthDate
+                                    ? birthDate.toLocaleDateString("tr-TR")
+                                    : "Tarih Seçin"}
                             </Text>
                         </TouchableOpacity>
                         {showDatePicker && (
                             <DateTimePicker
                                 value={birthDate || new Date()}
                                 mode="date"
-                                display="calendar"
+                                display={Platform.OS === "ios" ? "spinner" : "calendar"}
                                 onChange={(event, selectedDate) => {
                                     setShowDatePicker(false);
                                     if (selectedDate) setBirthDate(selectedDate);
@@ -150,7 +153,12 @@ export default function AddChild() {
                                     if (!isNaN(num)) setHeight(num);
                                 }}
                                 keyboardType="numeric"
-                                style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
+                                style={[
+                                    styles.input,
+                                    { flex: 1, marginHorizontal: 8, textAlign: "center" },
+                                ]}
+                                placeholder="Boy"
+                                placeholderTextColor="#6b7280"
                             />
 
                             <TouchableOpacity
@@ -180,7 +188,12 @@ export default function AddChild() {
                                     if (!isNaN(num)) setWeight(num);
                                 }}
                                 keyboardType="numeric"
-                                style={[styles.input, { flex: 1, marginHorizontal: 8, textAlign: "center" }]}
+                                style={[
+                                    styles.input,
+                                    { flex: 1, marginHorizontal: 8, textAlign: "center" },
+                                ]}
+                                placeholder="Kilo"
+                                placeholderTextColor="#6b7280"
                             />
 
                             <TouchableOpacity
@@ -196,29 +209,31 @@ export default function AddChild() {
                     <View style={styles.card}>
                         <Text style={styles.label}>Uyku Düzeni</Text>
                         <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map((option) => (
-                                <TouchableOpacity
-                                    key={option}
-                                    onPress={() => setSleepPattern(option)}
-                                    style={[
-                                        styles.genderBtn,
-                                        sleepPattern === option && styles.genderBtnSelected,
-                                    ]}
-                                >
-                                    <Text
+                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map(
+                                (option) => (
+                                    <TouchableOpacity
+                                        key={option}
+                                        onPress={() => setSleepPattern(option)}
                                         style={[
-                                            styles.genderBtnText,
-                                            sleepPattern === option && styles.genderBtnTextSelected,
+                                            styles.genderBtn,
+                                            sleepPattern === option && styles.genderBtnSelected,
                                         ]}
                                     >
-                                        {option}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                                        <Text
+                                            style={[
+                                                styles.genderBtnText,
+                                                sleepPattern === option && styles.genderBtnTextSelected,
+                                            ]}
+                                        >
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )
+                            )}
                         </View>
                     </View>
 
-                    {/* Diğer Alanlar */}
+                    {/* Alerjiler, Aşılar, Hastalıklar */}
                     <View style={styles.card}>
                         <TextInput
                             placeholder="Alerjiler (ör. Fıstık, Polen)"
@@ -243,7 +258,8 @@ export default function AddChild() {
                         />
                     </View>
 
-                    <TouchableOpacity onPress={onSave} style={styles.submitBtn}>
+                    {/* Kaydet Butonu */}
+                    <TouchableOpacity onPress={addChild} style={styles.submitBtn}>
                         <Text style={styles.submitText}>Kaydet</Text>
                     </TouchableOpacity>
                 </ScrollView>
@@ -253,13 +269,8 @@ export default function AddChild() {
 }
 
 const styles = StyleSheet.create({
-    page: {
-        flex: 1,
-        backgroundColor: "#0f172a",
-        padding: 20,
-    },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: "800",
         textAlign: "center",
         marginBottom: 16,
@@ -271,11 +282,6 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 16,
     },
-    label: {
-        marginBottom: 8,
-        fontWeight: "bold",
-        color: "#111827",
-    },
     input: {
         borderWidth: 1,
         borderColor: "#cbd5e1",
@@ -285,31 +291,21 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         color: "#111827",
     },
-    counterRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
+    label: { marginBottom: 8, fontWeight: "bold", color: "#111827" },
+    counterRow: { flexDirection: "row", alignItems: "center", marginBottom: 4 },
     counterBtn: {
         backgroundColor: "#2563eb",
         padding: 10,
         borderRadius: 8,
     },
-    counterText: {
-        color: "#fff",
-        fontSize: 20,
-        fontWeight: "bold",
-    },
+    counterText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
     submitBtn: {
         backgroundColor: "#2563eb",
         padding: 14,
         borderRadius: 12,
         marginBottom: 20,
     },
-    submitText: {
-        textAlign: "center",
-        fontWeight: "800",
-        color: "#fff",
-    },
+    submitText: { textAlign: "center", fontWeight: "800", color: "#fff" },
     genderBtn: {
         borderWidth: 1,
         borderColor: "#cbd5e1",
@@ -320,15 +316,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         backgroundColor: "#fff",
     },
-    genderBtnSelected: {
-        backgroundColor: "#2563eb",
-        borderColor: "#2563eb",
-    },
-    genderBtnText: {
-        fontWeight: "600",
-        color: "#111827",
-    },
-    genderBtnTextSelected: {
-        color: "#fff",
-    },
+    genderBtnSelected: { backgroundColor: "#2563eb", borderColor: "#2563eb" },
+    genderBtnText: { fontWeight: "600", color: "#111827" },
+    genderBtnTextSelected: { color: "#fff" },
 });

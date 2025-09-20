@@ -14,7 +14,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "@/lib/supabase";
-import { getSelectedChild } from "@/services/children";
 import { router } from "expo-router";
 
 export default function ProfileScreen() {
@@ -25,27 +24,28 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         const loadChild = async () => {
+            // 🔑 Giriş yapan kullanıcıyı al
             const { data: userData } = await supabase.auth.getUser();
             const user = userData?.user;
             if (!user) return;
 
-            // Kullanıcının profilinden selected_child_id getir
-            const { data: profile } = await supabase
+            // 🔑 Kullanıcının profilinden seçili çocuk ID'sini getir
+            const { data: profile, error: pErr } = await supabase
                 .from("profiles")
                 .select("selected_child_id")
                 .eq("id", user.id)
                 .single();
 
-            if (!profile?.selected_child_id) return;
+            if (pErr || !profile?.selected_child_id) return;
 
-            // Seçili çocuğu yükle
-            const { data: child, error } = await supabase
+            // 🔑 Seçili çocuğu getir
+            const { data: child, error: cErr } = await supabase
                 .from("children")
                 .select("*")
                 .eq("id", profile.selected_child_id)
                 .single();
 
-            if (!error && child) {
+            if (!cErr && child) {
                 setCurrentChild(child);
                 setFormValues(child);
             }
@@ -53,7 +53,6 @@ export default function ProfileScreen() {
 
         loadChild();
     }, []);
-
 
     const pickImage = async () => {
         try {
@@ -95,7 +94,7 @@ export default function ProfileScreen() {
     const formatFieldName = (field: string) => {
         const fieldNames: { [key: string]: string } = {
             name: "İsim",
-            birth_date: "Doğum Tarihi",
+            birthdate: "Doğum Tarihi", // ✅ doğru kolon adı
             height: "Boy",
             weight: "Kilo",
             sleep_pattern: "Uyku Düzeni",
@@ -138,7 +137,7 @@ export default function ProfileScreen() {
                     <Text style={styles.name}>{currentChild.name}</Text>
                 </View>
 
-                {["birth_date", "height", "weight", "sleep_pattern"].map((field) => (
+                {["birthdate", "height", "weight", "sleep_pattern"].map((field) => (
                     <Text key={field} style={styles.detail}>
                         {formatFieldName(field)}: {currentChild[field] || "-"}
                     </Text>
@@ -147,7 +146,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                     style={styles.editBtn}
                     onPress={() => {
-                        setEditFields(["birth_date", "height", "weight", "sleep_pattern"]);
+                        setEditFields(["birthdate", "height", "weight", "sleep_pattern"]);
                         setEditModalVisible(true);
                     }}
                 >
