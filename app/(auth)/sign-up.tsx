@@ -18,6 +18,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { ALLERGIES, DISEASES, VACCINES } from "@/app/(tabs)/profile";
+
 
 export default function SignUp() {
     const { commonStyles, isDark, theme } = useTheme();
@@ -33,9 +35,24 @@ export default function SignUp() {
     const [height, setHeight] = useState(100);
     const [weight, setWeight] = useState(10);
     const [sleepPattern, setSleepPattern] = useState("");
-    const [allergies, setAllergies] = useState("");
-    const [vaccines, setVaccines] = useState("");
-    const [illnesses, setIllnesses] = useState("");
+    const [allergies, setAllergies] = useState<string[]>([]);
+    const [vaccines, setVaccines] = useState<string[]>([]);
+    const [illnesses, setIllnesses] = useState<string[]>([]);
+
+    const Chip = ({ label, selected, onPress, color }: any) => (
+        <TouchableOpacity
+            onPress={onPress}
+            style={{
+                backgroundColor: selected ? color : "#e5e7eb",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                margin: 4,
+            }}
+        >
+            <Text style={{ color: selected ? "#fff" : "#111", fontSize: 14 }}>{label}</Text>
+        </TouchableOpacity>
+    );
 
     const onSignUp = async () => {
         if (!username.trim() || !email.trim() || !password.trim()) {
@@ -82,9 +99,10 @@ export default function SignUp() {
                 height: height.toString(),
                 weight: weight.toString(),
                 sleep_pattern: sleepPattern,
-                allergies,
-                vaccines,
-                illnesses,
+                allergies: allergies.join(", "),
+                vaccines: vaccines.join(", "),
+                illnesses: illnesses.join(", "),
+
             })
             .select()
             .single();
@@ -326,27 +344,59 @@ export default function SignUp() {
 
                         {/* Diğer Alanlar: Alerji, Aşı, Hastalık */}
                         <View style={commonStyles.card}>
-                            <TextInput
-                                placeholder="Alerjiler (ör. Fıstık, Polen)"
-                                value={allergies}
-                                onChangeText={setAllergies}
-                                style={commonStyles.input}
-                                placeholderTextColor="#6b7280"
-                            />
-                            <TextInput
-                                placeholder="Aşılar (ör. Kızamık, Tetanoz)"
-                                value={vaccines}
-                                onChangeText={setVaccines}
-                                style={commonStyles.input}
-                                placeholderTextColor="#6b7280"
-                            />
-                            <TextInput
-                                placeholder="Geçirdiği Hastalıklar (ör. Suçiçeği, Grip)"
-                                value={illnesses}
-                                onChangeText={setIllnesses}
-                                style={commonStyles.input}
-                                placeholderTextColor="#6b7280"
-                            />
+                            <View style={commonStyles.card}>
+                                <Text style={commonStyles.label}>Alerjiler</Text>
+                                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                    {ALLERGIES.map((item) => (
+                                        <Chip
+                                            key={item}
+                                            label={item}
+                                            selected={allergies.includes(item)}
+                                            onPress={() => {
+                                                setAllergies((prev) =>
+                                                    prev.includes(item) ? prev.filter((v) => v !== item) : [...prev, item]
+                                                );
+                                            }}
+                                            color="#60a5fa"
+                                        />
+                                    ))}
+                                </View>
+
+                                <Text style={commonStyles.label}>Aşılar</Text>
+                                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                    {VACCINES.map((item) => (
+                                        <Chip
+                                            key={item}
+                                            label={item}
+                                            selected={vaccines.includes(item)}
+                                            onPress={() => {
+                                                setVaccines((prev) =>
+                                                    prev.includes(item) ? prev.filter((v) => v !== item) : [...prev, item]
+                                                );
+                                            }}
+                                            color="#f59e0b"
+                                        />
+                                    ))}
+                                </View>
+
+                                <Text style={commonStyles.label}>Hastalıklar</Text>
+                                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                    {DISEASES.map((item) => (
+                                        <Chip
+                                            key={item}
+                                            label={item}
+                                            selected={illnesses.includes(item)}
+                                            onPress={() => {
+                                                setIllnesses((prev) =>
+                                                    prev.includes(item) ? prev.filter((v) => v !== item) : [...prev, item]
+                                                );
+                                            }}
+                                            color="#34d399"
+                                        />
+                                    ))}
+                                </View>
+                            </View>
+
                         </View>
 
                         {/* Kayıt Butonu */}

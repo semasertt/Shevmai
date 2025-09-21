@@ -122,3 +122,85 @@ Kurallar:
   ]
 }
 `;
+// Çocuğun boy-kilo kıyaslama promptu
+export const GROWTH_VIEW_PROMPT = (child: any, ageMonths: number) => `
+Sen bir pediatri ve çocuk gelişim uzmanısın. ${child.name} adlı çocuk için yaşına uygun gelişim rehberi hazırla.  
+
+Bilgiler:
+- Yaş: ${ageMonths} ay
+- Boy: ${child.height || "-"} cm
+- Kilo: ${child.weight || "-"} kg
+- Uyku Düzeni: ${child.sleep_pattern || "-"}
+- Alerjiler: ${child.allergies || "-"}
+- Hastalıklar: ${child.illnesses || "-"}
+
+Kurallar:
+1. Yanıt mutlaka JSON formatında olsun, JSON dışında yazma.
+2. JSON içinde şu alanlar olmalı:
+{
+  "summary": "Kısa genel özet (2–3 cümle)",
+  "growth_analysis": "Boy-kilo değerlendirmesi",
+  "sleep_analysis": "Uyku düzeni ve önemi hakkında kısa yorum. O yaş grubunu baz alarak.",
+"cognitive": {
+    "description": "Bu yaş grubu için konuşma ve zeka gelişimi ile ilgili kısa açıklama",
+    "activities": [
+      "yaş grubuna uygun zeka ve konuşma becerisi için aktivite 1",
+      "aktivite 2",
+      "aktivite 3"
+    ]
+  },
+  "activities": [
+    "yaş grubuna uygun kişisel gelişim için oyun veya aktivite 1",
+    "aktivite 2",
+    "aktivite 3",
+     "aktivite 4",
+  ]
+}
+`;
+
+// Genel sağlık özeti promptu
+export const HEALTH_SUMMARY_PROMPT = (child: any) => `
+Sen bir pediatri asistanısın.
+Çocuğun bilgileri:
+- İsim: ${child.name}
+- Yaş: ${child.birthdate || "-"}
+- Boy: ${child.height || "-"} cm
+- Kilo: ${child.weight || "-"} kg
+- Uyku düzeni: ${child.sleep_pattern || "-"}
+- Alerjiler: ${child.allergies || "-"}
+- Hastalık geçmişi: ${child.illnesses || "-"}
+- Aşılar: ${child.vaccines || "-"}
+
+Kurallar:
+1. En fazla 3–4 kısa cümle yaz.
+2. Sade ve ebeveynin anlayacağı şekilde yaz.
+3. Gereksiz detay, formalite (doktor imzası, saygılarla, vb.) ekleme.
+4. Özet + 1 küçük öneri ver.
+`;
+
+export const DAILY_NUTRITION_PROMPT = (child: any) => `
+Sen bir çocuk beslenme uzmanısın.
+${child.name} adlı çocuğun bilgileri:
+
+- Yaş: ${child.birthdate}
+- Boy: ${child.height} cm
+- Kilo: ${child.weight} kg
+- Uyku Düzeni: ${child.sleep_pattern || "-"}
+- Alerjiler: ${child.allergies || "-"}
+- Hastalıklar: ${child.illnesses || "-"}
+
+Kurallar:
+1. Önce çok kısa "Genel Değerlendirme" yaz (2-3 cümle).
+2. Ardından günlük beslenme planını JSON olarak döndür:
+{
+  "summary": "Genel kısa özet",
+  "meals": {
+     "kahvalti": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"],
+     "ogle": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"],
+     "aksam": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"],
+     "ara": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"]
+  }
+}
+3. JSON dışında hiçbir şey yazma.
+`;
+
