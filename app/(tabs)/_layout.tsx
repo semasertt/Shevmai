@@ -1,15 +1,20 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { commonStyles, themeColors } from "@/src/styles/common";
+import { useTheme } from "@/src/context/ThemeContext";
+import { getCommonStyles } from "@/src/styles/common";
 
 export default function TabsLayout() {
+    // 🔹 Buradan alıyoruz
+    const { isDark } = useTheme();
+    const commonStyles = getCommonStyles(isDark);
+
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarStyle: commonStyles.tabBar,                // ✅ stil nesnesi
-                tabBarActiveTintColor: themeColors.tabBarActive, // ✅ string renk
-                tabBarInactiveTintColor: themeColors.tabBarInactive, // ✅ string renk
+                tabBarStyle: commonStyles.tabBar,
+                tabBarActiveTintColor: isDark ? "#b47e5d" : "#5c4033", // örnek: temaya göre değişir
+                tabBarInactiveTintColor: isDark ? "#9ca3af" : "#d1d5db",
             }}
         >
             <Tabs.Screen

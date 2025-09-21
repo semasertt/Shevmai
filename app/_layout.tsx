@@ -1,15 +1,20 @@
+import React from "react";
+import { ThemeProvider } from "@/src/context/ThemeContext";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { commonStyles, themeColors } from "@/src/styles/common";
 
-export default function TabsLayout() {
+function TabsLayout() {
+    // useTheme BURADA olabilir (çünkü ThemeProvider üstte olacak)
+    // const { commonStyles, isDark } = useTheme();
+
     return (
         <Tabs
             screenOptions={{
-                headerShown: false, // üst başlık gizli
-                tabBarStyle: commonStyles.tabBar,
-                tabBarActiveTintColor: themeColors.tabBarActive,
-                tabBarInactiveTintColor: themeColors.tabBarInactive,
+                headerShown: false,
+                // şimdilik commonStyles yerine direkt style veriyoruz
+                tabBarStyle: { backgroundColor: "#f5ede3", height: 90 },
+                tabBarActiveTintColor: "#b47e5d",
+                tabBarInactiveTintColor: "#9ca3af",
             }}
         >
             <Tabs.Screen
@@ -44,5 +49,13 @@ export default function TabsLayout() {
                 }}
             />
         </Tabs>
+    );
+}
+
+export default function RootLayout() {
+    return (
+        <ThemeProvider>
+            <TabsLayout />
+        </ThemeProvider>
     );
 }
