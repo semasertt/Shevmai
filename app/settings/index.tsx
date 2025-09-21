@@ -58,7 +58,7 @@ export default function SettingsScreen() {
     };
 
     return (
-        <SafeAreaView style={commonStyles.page}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             {/* Status Bar */}
             <StatusBar
                 backgroundColor={theme.headerBg}
@@ -78,7 +78,7 @@ export default function SettingsScreen() {
             </View>
 
             {/* Kaydırılabilir içerik */}
-            <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView>
                 {/* 👶 Çocuk Yönetimi */}
                 <View style={commonStyles.card}>
                     <Text style={commonStyles.sectionTitle}>👶 Çocuk Yönetimi</Text>
@@ -121,26 +121,15 @@ export default function SettingsScreen() {
                 <View style={commonStyles.card}>
                     <Text style={commonStyles.sectionTitle}>👤 Hesap</Text>
 
-                    <TouchableOpacity style={commonStyles.settingItem}>
+                    <TouchableOpacity
+                        style={commonStyles.settingItem}
+                        onPress={() => router.push("/settings/profile-info")}
+                    >
                         <Ionicons name="person-circle-outline" size={20} color="#fbbf24" />
                         <Text style={commonStyles.settingText}>Profil Bilgilerim</Text>
                     </TouchableOpacity>
-
-                    <TouchableOpacity style={commonStyles.settingItem}>
-                        <Ionicons name="key-outline" size={20} color="#f87171" />
-                        <Text style={commonStyles.settingText}>Şifre Değiştir</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={commonStyles.settingItem}>
-                        <Ionicons name="mail-outline" size={20} color="#a78bfa" />
-                        <Text style={commonStyles.settingText}>E-posta Güncelle</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={commonStyles.settingItem}>
-                        <Ionicons name="language-outline" size={20} color="#22c55e" />
-                        <Text style={commonStyles.settingText}>Dil Seçimi</Text>
-                    </TouchableOpacity>
                 </View>
+
 
                 {/* 📌 Diğer */}
                 <View style={commonStyles.card}>

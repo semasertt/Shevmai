@@ -14,6 +14,8 @@ import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "react-native";
+
 
 async function resolveEmail(identity: string): Promise<string | null> {
     if (identity.includes("@")) return identity;
@@ -32,7 +34,7 @@ async function resolveEmail(identity: string): Promise<string | null> {
 }
 
 export default function SignIn() {
-    const { commonStyles, theme } = useTheme();
+    const { commonStyles, theme, isDark } = useTheme();
     const [identity, setIdentity] = useState("");
     const [password, setPassword] = useState("");
 
@@ -56,6 +58,17 @@ export default function SignIn() {
                 <SafeAreaView
                     style={{ flex: 1, backgroundColor: theme.background }} // ✅ Tema arka plan
                 >
+                    <StatusBar
+                        backgroundColor={theme.headerBg}
+                        barStyle={isDark ? "light-content" : "dark-content"}
+                    />
+
+                    {/* ✅ Header */}
+                    <View style={commonStyles.header}>
+                        <View style={commonStyles.headerIconLeft} />
+                        <Text style={commonStyles.headerTitle}>🔑 Giriş Yap</Text>
+                        <View style={commonStyles.headerIconRight} />
+                    </View>
                     <View style={commonStyles.authContainer}>
                         <Text style={commonStyles.authTitle}>Giriş Yap</Text>
 

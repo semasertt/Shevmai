@@ -11,9 +11,12 @@ import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useTheme } from "@/src/context/ThemeContext";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ChooseChildScreen() {
-    const { commonStyles } = useTheme();
+    const { commonStyles, isDark, theme } = useTheme();
     const [children, setChildren] = useState<any[]>([]);
 
     const loadChildren = async () => {
@@ -59,65 +62,92 @@ export default function ChooseChildScreen() {
     };
 
     return (
-        <View style={commonStyles.page}>
-            <Text style={commonStyles.title}>Çocuğunu Seç</Text>
-
-            <FlatList
-                data={children}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={[
-                            commonStyles.childCard,
-                            { flexDirection: "row", alignItems: "center" },
-                        ]}
-                        onPress={() => selectChild(item.id)}
-                    >
-                        {/* Avatar küçük yuvarlak */}
-                        {item.avatar ? (
-                            <Image
-                                source={{ uri: item.avatar }}
-                                style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 20,
-                                    marginRight: 12,
-                                    borderWidth: 1,
-                                    borderColor: "#d1d5db",
-                                }}
-                            />
-                        ) : (
-                            <View
-                                style={{
-                                    width: 40,
-                                    height: 40,
-                                    borderRadius: 20,
-                                    marginRight: 12,
-                                    backgroundColor: "#e5e7eb",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <Text style={{ color: "#6b7280", fontSize: 18 }}>👶</Text>
-                            </View>
-                        )}
-
-                        {/* Çocuk bilgileri */}
-                        <View>
-                            <Text style={commonStyles.childName}>{item.name}</Text>
-                            <Text style={commonStyles.childDetail}>
-                                {item.birthdate}
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                )}
-                ListEmptyComponent={
-                    <Text style={{ color: "#9ca3af", textAlign: "center", marginTop: 20 }}>
-                        Henüz çocuk eklenmemiş
-                    </Text>
-                }
-                contentContainerStyle={{ paddingBottom: 20 }}
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+            {/* ✅ StatusBar */}
+            <StatusBar
+                backgroundColor={theme.headerBg}
+                barStyle={isDark ? "light-content" : "dark-content"}
             />
-        </View>
+
+            {/* ✅ Navbar */}
+            <View style={commonStyles.header}>
+                <TouchableOpacity
+                    style={commonStyles.headerIconLeft}
+                    onPress={() => router.replace("/settings")} // giriş ekranına atıyor
+                >
+                    <Ionicons
+                        name="arrow-back"
+                        size={24}
+                        color={isDark ? "#fff" : "#000"}
+                    />
+                </TouchableOpacity>
+                <Text style={commonStyles.headerTitle}>👶 Çocuğunu Seç</Text>
+                <View style={commonStyles.headerIconRight} />
+            </View>
+
+            {/* ✅ İçerik */}
+            <View style={commonStyles.page}>
+                <FlatList
+                    data={children}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={[
+                                commonStyles.childCard,
+                                { flexDirection: "row", alignItems: "center" },
+                            ]}
+                            onPress={() => selectChild(item.id)}
+                        >
+                            {/* Avatar */}
+                            {item.avatar ? (
+                                <Image
+                                    source={{ uri: item.avatar }}
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 20,
+                                        marginRight: 12,
+                                        borderWidth: 1,
+                                        borderColor: "#d1d5db",
+                                    }}
+                                />
+                            ) : (
+                                <View
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        borderRadius: 20,
+                                        marginRight: 12,
+                                        backgroundColor: "#e5e7eb",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <Text style={{ color: "#6b7280", fontSize: 18 }}>👶</Text>
+                                </View>
+                            )}
+
+                            {/* Çocuk bilgileri */}
+                            <View>
+                                <Text style={commonStyles.childName}>{item.name}</Text>
+                                <Text style={commonStyles.childDetail}>{item.birthdate}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                    ListEmptyComponent={
+                        <Text
+                            style={{
+                                color: "#9ca3af",
+                                textAlign: "center",
+                                marginTop: 20,
+                            }}
+                        >
+                            Henüz çocuk eklenmemiş
+                        </Text>
+                    }
+                    contentContainerStyle={{ paddingBottom: 20 }}
+                />
+            </View>
+        </SafeAreaView>
     );
 }

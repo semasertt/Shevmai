@@ -4,11 +4,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    StyleSheet,
     Alert,
     KeyboardAvoidingView,
-    TouchableWithoutFeedback,
-    Keyboard,
     Platform,
     ScrollView,
 } from "react-native";
@@ -16,10 +13,12 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { useTheme } from "@/src/context/ThemeContext";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function AddChildScreen() {
-    const { commonStyles } = useTheme();
+    const { commonStyles, isDark, theme } = useTheme();
 
     const [childName, setChildName] = useState("");
     const [birthDate, setBirthDate] = useState<Date | null>(null);
@@ -44,7 +43,6 @@ export default function AddChildScreen() {
             return;
         }
 
-        // ✅ Çocuğu ekle ve id'sini al
         const { data, error } = await supabase
             .from("children")
             .insert({
@@ -65,31 +63,47 @@ export default function AddChildScreen() {
         if (error) {
             Alert.alert("Hata", error.message);
         } else {
-            // ✅ Yeni eklenen çocuğu otomatik seçili yap
             await supabase
                 .from("profiles")
                 .update({ selected_child_id: data.id })
                 .eq("id", user.id);
 
             Alert.alert("Başarılı", "Çocuk eklendi ve seçildi");
-            router.replace("/(tabs)/home"); // direkt ana ekrana
+            router.replace("/(tabs)/home");
         }
     };
 
     return (
         <KeyboardAvoidingView
-            style={commonStyles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={80}
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+                {/* ✅ StatusBar */}
+                <StatusBar
+                    backgroundColor={theme.headerBg}
+                    barStyle={isDark ? "light-content" : "dark-content"}
+                />
+
+                {/* ✅ Navbar */}
+                <View style={commonStyles.header}>
+                    <TouchableOpacity onPress={() => router.replace("/settings")} style={commonStyles.headerIconLeft}>
+                        <Ionicons name="arrow-back" size={24} color={theme.text} />
+                    </TouchableOpacity>
+                    <Text style={commonStyles.headerTitle}>👶 Yeni Çocuk Ekle</Text>
+                    <View style={commonStyles.headerIconRight} />
+                </View>
+
+                {/* ✅ Scrollable Content */}
                 <ScrollView
-                    contentContainerStyle={{ flexGrow: 1, padding: 20 }}
+                    keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
                 >
                     <Text style={commonStyles.title}>Yeni Çocuk Ekle</Text>
 
-                    {/* Adı */}
+                    {/* 🔻 Adı + Doğum Tarihi */}
                     <View style={commonStyles.card}>
                         <TextInput
                             placeholder="Adı"
@@ -99,7 +113,6 @@ export default function AddChildScreen() {
                             placeholderTextColor="#6b7280"
                         />
 
-                        {/* Doğum Tarihi */}
                         <Text style={commonStyles.label}>Doğum Tarihi</Text>
                         <TouchableOpacity
                             onPress={() => setShowDatePicker(true)}
@@ -124,7 +137,7 @@ export default function AddChildScreen() {
                         )}
                     </View>
 
-                    {/* Cinsiyet */}
+                    {/* 🔻 Cinsiyet */}
                     <View style={commonStyles.card}>
                         <Text style={commonStyles.label}>Cinsiyet</Text>
                         <View style={{ flexDirection: "row", marginBottom: 4 }}>
@@ -140,8 +153,7 @@ export default function AddChildScreen() {
                                     <Text
                                         style={[
                                             commonStyles.genderBtnText,
-                                            gender === option &&
-                                            commonStyles.genderBtnTextSelected,
+                                            gender === option && commonStyles.genderBtnTextSelected,
                                         ]}
                                     >
                                         {option}
@@ -151,7 +163,7 @@ export default function AddChildScreen() {
                         </View>
                     </View>
 
-                    {/* Boy */}
+                    {/* 🔻 Boy */}
                     <View style={commonStyles.card}>
                         <Text style={commonStyles.label}>Boy (cm)</Text>
                         <View style={commonStyles.counterRow}>
@@ -186,7 +198,7 @@ export default function AddChildScreen() {
                         </View>
                     </View>
 
-                    {/* Kilo */}
+                    {/* 🔻 Kilo */}
                     <View style={commonStyles.card}>
                         <Text style={commonStyles.label}>Kilo (kg)</Text>
                         <View style={commonStyles.counterRow}>
@@ -221,35 +233,37 @@ export default function AddChildScreen() {
                         </View>
                     </View>
 
-                    {/* Uyku Düzeni */}
+                    {/* 🔻 Uyku Düzeni */}
                     <View style={commonStyles.card}>
                         <Text style={commonStyles.label}>Uyku Düzeni</Text>
                         <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map((option) => (
-                                <TouchableOpacity
-                                    key={option}
-                                    onPress={() => setSleepPattern(option)}
-                                    style={[
-                                        commonStyles.genderBtn,
-                                        sleepPattern === option &&
-                                        commonStyles.genderBtnSelected,
-                                    ]}
-                                >
-                                    <Text
+                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map(
+                                (option) => (
+                                    <TouchableOpacity
+                                        key={option}
+                                        onPress={() => setSleepPattern(option)}
                                         style={[
-                                            commonStyles.genderBtnText,
+                                            commonStyles.genderBtn,
                                             sleepPattern === option &&
-                                            commonStyles.genderBtnTextSelected,
+                                            commonStyles.genderBtnSelected,
                                         ]}
                                     >
-                                        {option}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
+                                        <Text
+                                            style={[
+                                                commonStyles.genderBtnText,
+                                                sleepPattern === option &&
+                                                commonStyles.genderBtnTextSelected,
+                                            ]}
+                                        >
+                                            {option}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )
+                            )}
                         </View>
                     </View>
 
-                    {/* Alerjiler, Aşılar, Hastalıklar */}
+                    {/* 🔻 Alerjiler, Aşılar, Hastalıklar */}
                     <View style={commonStyles.card}>
                         <TextInput
                             placeholder="Alerjiler (ör. Fıstık, Polen)"
@@ -274,12 +288,12 @@ export default function AddChildScreen() {
                         />
                     </View>
 
-                    {/* Kaydet Butonu */}
+                    {/* 🔻 Kaydet Butonu */}
                     <TouchableOpacity onPress={addChild} style={commonStyles.submitBtn}>
                         <Text style={commonStyles.submitText}>Kaydet</Text>
                     </TouchableOpacity>
                 </ScrollView>
-            </TouchableWithoutFeedback>
+            </SafeAreaView>
         </KeyboardAvoidingView>
     );
 }

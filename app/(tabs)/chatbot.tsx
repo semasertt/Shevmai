@@ -376,7 +376,7 @@ export default function Chatbot() {
             />
 
             {/* 📌 Header (ScrollView dışında sabit) */}
-            <SafeAreaView  style={commonStyles.safeArea} edges={["left", "right", "bottom"]}>
+            <SafeAreaView>
                 <View style={commonStyles.header}>
                     <TouchableOpacity
                         onPress={() => setShowSidebar(true)}
