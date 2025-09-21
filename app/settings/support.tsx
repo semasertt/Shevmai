@@ -23,19 +23,19 @@ export default function SupportScreen() {
             {/* İçerik */}
             <View style={commonStyles.card}>
                 <Text style={commonStyles.sectionTitle}>Bize Ulaşın</Text>
-                <Text style={commonStyles.detail}>📧 E-posta: destek@shevmai.com</Text>
+                <Text style={commonStyles.detail}>📧 E-posta: shevmaidestek@gmail.com</Text>
                 <Text style={commonStyles.detail}>📞 Telefon: +90 555 123 45 67</Text>
                 <Text style={commonStyles.detail}>🌍 Web: www.shevmai.com</Text>
 
                 <TouchableOpacity
                     style={[commonStyles.btnPrimary, { marginTop: 12 }]}
-                    onPress={() => Linking.openURL("mailto:destek@shevmai.com")}
+                    onPress={() => Linking.openURL("mailto:shevmaidestek@gmail.com")}
                 >
                     <Text style={commonStyles.btnPrimaryText}>E-posta Gönder</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[commonStyles.btnOutline, { marginTop: 8 }]}
-                    onPress={() => Linking.openURL("tel:+905551234567")}
+                    onPress={() => Linking.openURL("tel:+905369563553")}
                 >
                     <Text style={commonStyles.btnOutlineText}>Telefon Et</Text>
                 </TouchableOpacity>
