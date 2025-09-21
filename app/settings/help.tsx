@@ -9,7 +9,7 @@ export default function HelpScreen() {
     const { commonStyles, theme } = useTheme();
 
     return (
-        <SafeAreaView  style={{ flex: 1, backgroundColor: theme.background }} edges={["top"]}>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             <StatusBar backgroundColor={theme.headerBg} barStyle={theme.statusBar} />
 
             {/* Header */}
@@ -40,6 +40,6 @@ export default function HelpScreen() {
                     </Text>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -1,10 +1,81 @@
-import { StyleSheet } from "react-native";
+import {Platform, StatusBar, StyleSheet} from "react-native";
 import { lightTheme, darkTheme } from "./themes";
 
 export const getCommonStyles = (isDark: boolean) => {
     const theme = isDark ? darkTheme : lightTheme;
 
     return StyleSheet.create({
+        statusRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },
+        statusDot: {
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            marginRight: 6,
+        },
+        statusText: { fontSize: 12, fontStyle: "italic" },
+        recordSub: {
+            marginLeft: 6,
+            fontSize: 13,
+            color: "#6b7280", // gri ton
+        },
+
+        recordHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", },
+// CATEGORY CARDS
+        // Sağ üstte durum yazısı
+        vaccineStatus: {
+            fontSize: 12,
+            marginTop: 2,
+            fontStyle: "italic",
+            color: "#6b7280",
+            textAlign: "right",
+        },
+
+        // Ay bilgisi (isteğe bağlı)
+        vaccineMonth: {
+            fontSize: 13,
+            marginTop: 4,
+            color: "#6b7280",
+        },
+        vaccineCard: {
+            backgroundColor: "#fff",
+            borderRadius: 12,
+            padding: 16,
+            marginBottom: 16,
+            shadowColor: "#000",
+            shadowOpacity: 0.05,
+            shadowRadius: 6,
+            elevation: 2,
+        },
+        vaccineTitle: {
+            fontSize: 16,
+            fontWeight: "600",
+            marginBottom: 6,
+            color: "#3E2723", // 🔹 beyaz yerine koyu kahve
+        },
+
+        vaccineDesc: {
+            color: "#374151",
+            marginBottom: 6,
+            lineHeight: 20,
+        },
+
+
+// durumlara göre hafif arka planlar
+        doneCard: { backgroundColor: "#F8F5F2" },     // kremimsi beyaz
+        currentCard: { backgroundColor: "#ECF8F1" },  // beyaz + pastel yeşil
+        futureCard: { backgroundColor: "#F2F7FB" },   // beyaz + pastel mavi
+        pastCard: { backgroundColor: "#F6F2EF" },     // beyaz + soft bej
+
+
+        summaryCard: {
+            padding: 16,
+            borderRadius: 12,
+            marginBottom: 20,
+            backgroundColor: "#F5EFE7", // özet için açık krem
+        },
+        summaryTitle: { color: "#6D4C41", fontSize: 16, fontWeight: "600", marginBottom: 6 },
+        summaryText: { color: "#4E342E", fontSize: 14, lineHeight: 20 },
+
         // GENEL
         container: { flex: 1, backgroundColor: theme.background, paddingBottom: 32 },
         page: { flex: 1, backgroundColor: theme.background, paddingBottom: 32},
@@ -109,16 +180,24 @@ export const getCommonStyles = (isDark: boolean) => {
         editBtnText: { color: theme.onPrimary, marginLeft: 6, fontWeight: "600" },
 
         // HEADER
-        safeArea: { backgroundColor: theme.background },
+        safeArea: {
+            flex: 0, // sadece status bar yüksekliği kadar alan kaplasın
+            backgroundColor: theme.headerBg, // status bar arkasını boyasın
+        },
         header: {
             width: "100%",
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingVertical: 16,
             paddingHorizontal: 12,
             backgroundColor: theme.headerBg,
+
+            // Status bar boşluğu için iOS
+            paddingTop: Platform.OS === "ios" ? 44 : StatusBar.currentHeight,
+            // Header yüksekliği
+            height: Platform.OS === "ios" ? 88 : (56 + (StatusBar.currentHeight || 0)),
         },
+
         headerTitle: {
             color: theme.text,
             fontSize: 20,
@@ -411,6 +490,7 @@ export const getCommonStyles = (isDark: boolean) => {
             paddingBottom: 10,
         },
     });
+
 };
 
 // 🔹 Varsayılan light theme export (eski import’lar bozulmasın diye)

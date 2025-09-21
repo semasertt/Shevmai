@@ -107,7 +107,7 @@ export default function SignUp() {
             style={{ flex: 1 }}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+                <View style={{ flex: 1, backgroundColor: theme.background }}>
                     {/* ✅ StatusBar */}
                     <StatusBar
                         backgroundColor={theme.headerBg}
@@ -135,6 +135,7 @@ export default function SignUp() {
                         contentContainerStyle={{
                             paddingHorizontal: 16,
                             paddingBottom: 40,
+                            marginTop: 20
                         }}
                         keyboardShouldPersistTaps="handled"
                     >
@@ -357,7 +358,7 @@ export default function SignUp() {
                             Zaten hesabın var mı? <Link href="/(auth)/sign-in">Giriş yap</Link>
                         </Text>
                     </ScrollView>
-                </SafeAreaView>
+                </View>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );

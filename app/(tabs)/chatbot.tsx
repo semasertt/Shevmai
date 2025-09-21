@@ -367,7 +367,7 @@ export default function Chatbot() {
         <KeyboardAvoidingView
             style={commonStyles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 0}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
             {/* Status Bar */}
             <StatusBar
@@ -376,7 +376,7 @@ export default function Chatbot() {
             />
 
             {/* 📌 Header (ScrollView dışında sabit) */}
-            <SafeAreaView>
+            <View>
                 <View style={commonStyles.header}>
                     <TouchableOpacity
                         onPress={() => setShowSidebar(true)}
@@ -394,7 +394,7 @@ export default function Chatbot() {
                         <Ionicons name="add-circle" size={26} color="#5c4033" />
                     </TouchableOpacity>
                 </View>
-            </SafeAreaView>
+            </View>
 
 
             {/* 📌 Mesajlar */}

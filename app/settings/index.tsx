@@ -58,7 +58,7 @@ export default function SettingsScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             {/* Status Bar */}
             <StatusBar
                 backgroundColor={theme.headerBg}
@@ -194,6 +194,6 @@ export default function SettingsScreen() {
                     <Text style={commonStyles.logoutText}>Çıkış Yap</Text>
                 </TouchableOpacity>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -77,7 +77,7 @@ export default function ProfileScreen() {
     };
 
     return (
-        <SafeAreaView style={commonStyles.page}>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             <StatusBar
                 backgroundColor={theme.headerBg}
                 barStyle={isDark ? "light-content" : "dark-content"}
@@ -125,6 +125,6 @@ export default function ProfileScreen() {
                     <Text style={commonStyles.authButtonText}>Kaydet</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

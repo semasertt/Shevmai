@@ -8,12 +8,15 @@ import {
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { supabase } from "@/lib/supabase";
-import { getSelectedChild } from "@/services/children";
+import { getSelectedChild, setSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
 import Timeline from "@/components/ui/TimelineCalender";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback } from "react";
 
 
 const DEFAULT_CATEGORIES = [
@@ -33,25 +36,60 @@ export default function HomeScreen() {
     const [records, setRecords] = useState<any[]>([]);
     const [recordsByCategory, setRecordsByCategory] = useState<{ [key: string]: any[] }>({});
 
-    useEffect(() => {
-        loadHealthEvents();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            loadHealthEvents(); // ekran her göründüğünde yeniden çek
+        }, [])
+    );
+
 
     const loadHealthEvents = async () => {
-        const childId = await getSelectedChild();
-        if (!childId) return;
+        // ✅ Önce localden oku
+        let childId = await getSelectedChild();
+        console.log("📦 Localden gelen childId:", childId);
 
-        const {data, error} = await supabase
+        if (!childId) {
+            // ✅ Local boşsa DB’den al
+            let childId = await getSelectedChild();
+
+            const { data: userData } = await supabase.auth.getUser();
+            if (userData?.user) {
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("selected_child_id")
+                    .eq("id", userData.user.id)
+                    .single();
+
+                if (profile?.selected_child_id && profile.selected_child_id !== childId) {
+                    childId = profile.selected_child_id;
+                    if(childId){
+                        await setSelectedChild(childId); // ✅ local güncelle
+
+                    }
+                }
+            }
+
+        }
+
+        if (!childId) {
+            console.log("❌ childId hala bulunamadı, sorgu yapılmayacak");
+            return;
+        }
+
+
+        const { data, error } = await supabase
             .from("health_events")
             .select("*")
-            .eq("child_id", childId)
-            .order("created_at", {ascending: false});
+            .eq("child_id", childId) // filtre
+            .order("created_at", { ascending: false });
+
 
         if (!error && data) {
             setRecords(data);
             groupRecordsByCategory(data);
         }
     };
+
 
     const groupRecordsByCategory = (data: any[]) => {
         const grouped: { [key: string]: any[] } = {};
@@ -99,11 +137,11 @@ export default function HomeScreen() {
     return (
         <>
             {/* 📌 Header */}
-            <SafeAreaView style={commonStyles.safeArea}>
+            <View style={commonStyles.safeArea}>
                 <View style={commonStyles.header}>
                     <Text style={commonStyles.headerTitle}>Anasayfa</Text>
                 </View>
-            </SafeAreaView>
+            </View>
 
             {/* 📌 İçerik */}
             <ScrollView

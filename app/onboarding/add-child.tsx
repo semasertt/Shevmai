@@ -16,6 +16,7 @@ import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { setSelectedChild } from "@/services/children";
 
 export default function AddChildScreen() {
     const { commonStyles, isDark, theme } = useTheme();
@@ -67,7 +68,11 @@ export default function AddChildScreen() {
                 .from("profiles")
                 .update({ selected_child_id: data.id })
                 .eq("id", user.id);
+            // ✅ Local’i güncelle
+            if(data.id){
+                await setSelectedChild(data.id);
 
+            }
             Alert.alert("Başarılı", "Çocuk eklendi ve seçildi");
             router.replace("/(tabs)/home");
         }
@@ -79,7 +84,7 @@ export default function AddChildScreen() {
             behavior={Platform.OS === "ios" ? "padding" : undefined}
             keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         >
-            <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+            <View style={{ flex: 1, backgroundColor: theme.background }}>
                 {/* ✅ StatusBar */}
                 <StatusBar
                     backgroundColor={theme.headerBg}
@@ -293,7 +298,7 @@ export default function AddChildScreen() {
                         <Text style={commonStyles.submitText}>Kaydet</Text>
                     </TouchableOpacity>
                 </ScrollView>
-            </SafeAreaView>
+            </View>
         </KeyboardAvoidingView>
     );
 }

@@ -55,7 +55,7 @@ export default function SignIn() {
             style={{ flex: 1 }}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <SafeAreaView
+                <View
                     style={{ flex: 1, backgroundColor: theme.background }} // ✅ Tema arka plan
                 >
                     <StatusBar
@@ -97,7 +97,7 @@ export default function SignIn() {
                             Hesabın yok mu? <Link href="/(auth)/sign-up">Kayıt ol</Link>
                         </Text>
                     </View>
-                </SafeAreaView>
+                </View>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );

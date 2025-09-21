@@ -14,6 +14,7 @@ import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { setSelectedChild } from "@/services/children";
 
 export default function ChooseChildScreen() {
     const { commonStyles, isDark, theme } = useTheme();
@@ -57,12 +58,15 @@ export default function ChooseChildScreen() {
             return;
         }
 
+        // ✅ Local’i güncelle
+        await setSelectedChild(childId);
+
         Alert.alert("Başarılı", "Çocuk seçildi");
         router.replace("/(tabs)/home");
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={commonStyles.page} >
             {/* ✅ StatusBar */}
             <StatusBar
                 backgroundColor={theme.headerBg}
@@ -148,6 +152,6 @@ export default function ChooseChildScreen() {
                     contentContainerStyle={{ paddingBottom: 20 }}
                 />
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

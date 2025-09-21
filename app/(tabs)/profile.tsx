@@ -173,7 +173,7 @@ export default function ProfileScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             {/* 📌 Header */}
             <View style={commonStyles.header}>
                 <Text style={commonStyles.headerTitle}>Profil</Text>
@@ -349,6 +349,6 @@ export default function ProfileScreen() {
                     </View>
                 </View>
             </Modal>
-        </SafeAreaView>
+        </View>
     );
 }
