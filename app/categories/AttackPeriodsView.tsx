@@ -1,10 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity } from "react-native";
+import {
+    View,
+    Text,
+    ActivityIndicator,
+    TouchableOpacity,
+    FlatList,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getCurrentChildWithDetails } from "@/services/children";
 import { analyzeText } from "@/src/api/gemini";
 import { ATTACK_PROMPT } from "@/src/prompts";
 import { commonStyles } from "@/src/styles/common";
-
+import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 // 🔹 Duruma göre renk helper
 export const getStatusStyle = (status: string) => {
     switch (status) {
@@ -25,26 +33,45 @@ export const getStatusStyle = (status: string) => {
 export function AttackPeriodsView() {
     const [child, setChild] = useState<any>(null);
     const [periods, setPeriods] = useState<any[]>([]);
-    const [expanded, setExpanded] = useState<number | null>(null); // 🔹 Açık kart state
+    const [expanded, setExpanded] = useState<number | null>(null);
     const [summary, setSummary] = useState<string>("");
     const [loading, setLoading] = useState(true);
 
+    // 📦 Cache key
+    const CACHE_KEY = "attack_periods_cache";
+
     useEffect(() => {
         (async () => {
-            const c = await getCurrentChildWithDetails();
-            setChild(c);
+            setLoading(true);
 
-            if (c?.birthdate) {
-                const birth = new Date(c.birthdate);
-                const today = new Date();
-                const ageMonths =
-                    (today.getFullYear() - birth.getFullYear()) * 12 +
-                    (today.getMonth() - birth.getMonth());
-
+            // 1. Cache varsa hemen göster
+            const cached = await AsyncStorage.getItem(CACHE_KEY);
+            if (cached) {
                 try {
-                    const prompt = ATTACK_PROMPT(c.name, ageMonths);
-                    const aiResult = await analyzeText(prompt);
+                    const parsed = JSON.parse(cached);
+                    setSummary(parsed.summary || "");
+                    setPeriods(parsed.periods || []);
+                    setLoading(false); // 👈 hemen göster
+                } catch (e) {
+                    console.warn("❌ Cache parse hatası:", e);
+                }
+            }
 
+            // 2. Çocuğu ve AI sonucunu paralel çek
+            try {
+                const c = await getCurrentChildWithDetails();
+                setChild(c);
+
+                if (c?.birthdate) {
+                    const birth = new Date(c.birthdate);
+                    const today = new Date();
+                    const ageMonths =
+                        (today.getFullYear() - birth.getFullYear()) * 12 +
+                        (today.getMonth() - birth.getMonth());
+
+                    const prompt = ATTACK_PROMPT(c.name, ageMonths);
+
+                    const aiResult = await analyzeText(prompt);
                     const clean = aiResult.replace(/```json|```/g, "").trim();
                     const parsed = JSON.parse(clean);
 
@@ -60,10 +87,17 @@ export function AttackPeriodsView() {
 
                     setSummary(parsed.summary || "");
                     setPeriods(sorted);
-                } catch (err) {
-                    console.error("❌ Attack API hatası:", err);
+
+                    // 📦 Cache güncelle
+                    await AsyncStorage.setItem(
+                        CACHE_KEY,
+                        JSON.stringify({ summary: parsed.summary, periods: sorted })
+                    );
                 }
+            } catch (err) {
+                console.error("❌ Attack API hatası:", err);
             }
+
             setLoading(false);
         })();
     }, []);
@@ -77,7 +111,7 @@ export function AttackPeriodsView() {
         );
     }
 
-    if (loading) {
+    if (loading && periods.length === 0) {
         return (
             <View style={commonStyles.page}>
                 <ActivityIndicator size="large" color="#3b82f6" />
@@ -86,60 +120,73 @@ export function AttackPeriodsView() {
     }
 
     return (
-        <View style={{ flex: 1 }}>
-            {/* Header */}
+        <View style={[commonStyles.header, { flexDirection: "row", alignItems: "center" }]}>
+            <TouchableOpacity onPress={() => router.back()} style={{ padding: 8, marginRight: 8 }}>
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>            {/* Header */}
             <View style={commonStyles.header}>
-                <Text style={commonStyles.headerTitle}>⚡ {child.name} için Atak Dönemleri</Text>
+                <Text style={commonStyles.headerTitle}>
+                    ⚡ {child.name} için Atak Dönemleri
+                </Text>
             </View>
 
-            <ScrollView
+            <FlatList
                 style={[commonStyles.page, { marginTop: 12 }]}
+                data={periods}
+                keyExtractor={(_, idx) => String(idx)}
+                ListHeaderComponent={
+                    summary ? (
+                        <View style={commonStyles.summaryCard}>
+                            <Text style={commonStyles.summaryTitle}>📌 Genel Özet</Text>
+                            <Text style={commonStyles.summaryText}>{summary}</Text>
+                        </View>
+                    ) : null
+                }
+                renderItem={({ item, index }) => {
+                    const statusStyle = getStatusStyle(item.status);
+                    let cardStyle = commonStyles.futureCard;
+                    if (item.status === "geçildi") cardStyle = commonStyles.doneCard;
+                    if (item.status === "şu anda") cardStyle = commonStyles.currentCard;
+
+                    const isOpen = expanded === index;
+
+                    return (
+                        <TouchableOpacity
+                            style={[commonStyles.vaccineCard, cardStyle]}
+                            onPress={() => setExpanded(isOpen ? null : index)}
+                            activeOpacity={0.8}
+                        >
+                            {/* Başlık */}
+                            <Text style={commonStyles.vaccineTitle}>{item.title}</Text>
+
+                            {/* Durum Row */}
+                            <View style={commonStyles.statusRow}>
+                                <View
+                                    style={[commonStyles.statusDot, statusStyle.dot]}
+                                />
+                                <Text
+                                    style={[commonStyles.statusText, statusStyle.text]}
+                                >
+                                    {item.status}
+                                </Text>
+                            </View>
+
+                            {/* Açılır Detay */}
+                            {isOpen && (
+                                <Text style={commonStyles.vaccineDesc}>
+                                    {item.description}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    );
+                }}
+                ListEmptyComponent={
+                    <Text style={commonStyles.emptyText}>
+                        Atak dönemi bilgisi bulunamadı
+                    </Text>
+                }
                 contentContainerStyle={{ paddingBottom: 30 }}
-            >
-                {/* 🔹 Özet Kartı */}
-                {summary ? (
-                    <View style={commonStyles.summaryCard}>
-                        <Text style={commonStyles.summaryTitle}>📌 Genel Özet</Text>
-                        <Text style={commonStyles.summaryText}>{summary}</Text>
-                    </View>
-                ) : null}
-
-                {/* 🔹 Atak Listesi */}
-                {periods.length > 0 ? (
-                    periods.map((p, idx) => {
-                        const statusStyle = getStatusStyle(p.status);
-                        let cardStyle = commonStyles.futureCard;
-                        if (p.status === "geçildi") cardStyle = commonStyles.doneCard;
-                        if (p.status === "şu anda") cardStyle = commonStyles.currentCard;
-
-                        return (
-                            <TouchableOpacity
-                                key={idx}
-                                style={[commonStyles.vaccineCard, cardStyle]}
-                                onPress={() => setExpanded(expanded === idx ? null : idx)}
-                            >
-                                {/* Başlık */}
-                                <Text style={commonStyles.vaccineTitle}>{p.title}</Text>
-
-                                {/* Durum Row */}
-                                <View style={commonStyles.statusRow}>
-                                    <View style={[commonStyles.statusDot, statusStyle.dot]} />
-                                    <Text style={[commonStyles.statusText, statusStyle.text]}>
-                                        {p.status}
-                                    </Text>
-                                </View>
-
-                                {/* Açılır Detay */}
-                                {expanded === idx && (
-                                    <Text style={commonStyles.vaccineDesc}>{p.description}</Text>
-                                )}
-                            </TouchableOpacity>
-                        );
-                    })
-                ) : (
-                    <Text style={commonStyles.emptyText}>Atak dönemi bilgisi bulunamadı</Text>
-                )}
-            </ScrollView>
+            />
         </View>
     );
 }

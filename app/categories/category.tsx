@@ -30,7 +30,10 @@ export default function CategoryPage() {
     return (
         <View style={{ flex: 1 }}>
             {/* Header */}
-            <View style={commonStyles.header}>
+            <View style={[commonStyles.header, { flexDirection: "row", alignItems: "center" }]}>
+                <TouchableOpacity onPress={() => router.back()} style={{ padding: 8, marginRight: 8 }}>
+                    <Ionicons name="arrow-back" size={24} color="#111111" />
+                </TouchableOpacity>
                 <Text style={commonStyles.headerTitle}>{category}</Text>
             </View>
 

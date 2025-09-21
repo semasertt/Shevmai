@@ -1,7 +1,19 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {
+    View,
+    Text,
+    Image,
+    TouchableOpacity,
+    FlatList,
+} from "react-native";
+import { commonStyles } from "@/src/styles/common";
 
-export type HealthCategory = "vaccines" | "weight" | "illness" | "allergy" | "labs";
+export type HealthCategory =
+    | "vaccines"
+    | "weight"
+    | "illness"
+    | "allergy"
+    | "labs";
 
 export interface HealthCard {
     id: string;
@@ -9,7 +21,10 @@ export interface HealthCard {
     category: HealthCategory;
     title: string;
     subtitle?: string;
-    dateISO: string;
+    date: string;
+    summary?: string;
+    advice?: string;
+    image_url?: string;
 }
 
 const categoryColor: Record<HealthCategory, string> = {
@@ -23,67 +38,73 @@ const categoryColor: Record<HealthCategory, string> = {
 type Props = { items: HealthCard[] };
 
 export default function Timeline({ items }: Props) {
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
+
     if (items.length === 0) {
-        return (
-            <Text style={styles.empty}>Henüz kayıt bulunmuyor</Text>
-        );
+        return <Text style={commonStyles.emptyText}>Henüz kayıt bulunmuyor</Text>;
     }
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.sectionTitle}>📋 Son Kayıtlar</Text>
-            {items.map((item) => (
-                <View key={item.id} style={styles.card}>
-                    <View style={[styles.dot, { backgroundColor: categoryColor[item.category] }]} />
-                    <View style={{ flex: 1 }}>
-                        <Text style={styles.title}>{item.title}</Text>
-                        {item.subtitle ? (
-                            <Text style={styles.subtitle}>{item.subtitle}</Text>
-                        ) : null}
-                        <Text style={styles.date}>
-                            {new Date(item.dateISO).toLocaleDateString()}
-                        </Text>
-                    </View>
-                </View>
-            ))}
+        <View style={{ marginTop: 10 }}>
+            <Text style={commonStyles.sectionTitle}>📋 Son Kayıtlar</Text>
+            <FlatList
+                data={items}
+                keyExtractor={(item, index) => String(item.id || index)}
+                renderItem={({ item, index }) => {
+                    const isOpen = openIndex === index;
+                    return (
+                        <TouchableOpacity
+                            style={commonStyles.vaccineCard}
+                            activeOpacity={0.8}
+                            onPress={() => setOpenIndex(isOpen ? null : index)}
+                        >
+                            {/* Başlık + tarih */}
+                            <View style={commonStyles.recordHeader}>
+                                <View
+                                    style={{ flexDirection: "row", alignItems: "center" }}
+                                >
+                                    <View
+                                        style={[
+                                            commonStyles.statusDot,
+                                            { backgroundColor: categoryColor[item.category] },
+                                        ]}
+                                    />
+                                    <Text style={commonStyles.vaccineTitle}>{item.title}</Text>
+                                    {item.date && (
+                                        <Text style={commonStyles.recordSub}>  •  {item.date}</Text>
+                                    )}
+                                </View>
+                            </View>
+
+                            {/* Açılınca detaylar */}
+                            {isOpen && (
+                                <>
+                                    {item.summary ? (
+                                        <Text style={commonStyles.vaccineDesc}>
+                                            {item.summary}
+                                        </Text>
+                                    ) : null}
+
+                                    {item.advice ? (
+                                        <Text style={commonStyles.vaccineDesc}>
+                                            {item.advice}
+                                        </Text>
+                                    ) : null}
+
+                                    {item.image_url ? (
+                                        <Image
+                                            source={{ uri: item.image_url }}
+                                            style={commonStyles.recordImage}
+                                            resizeMode="cover"
+                                        />
+                                    ) : null}
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    );
+                }}
+                scrollEnabled={false}
+            />
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { marginTop: 10 },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: "700",
-        color: "#5c4033",
-        marginBottom: 8,
-    },
-    card: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#fffaf5", // ✅ krem kutucuk
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 10,
-        shadowColor: "#000",
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
-    },
-    dot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginRight: 10,
-    },
-    title: { fontSize: 15, fontWeight: "700", color: "#5c4033" },
-    subtitle: { fontSize: 13, color: "#6b7280", marginTop: 2 },
-    date: { fontSize: 12, color: "#9ca3af", marginTop: 4 },
-    empty: {
-        textAlign: "center",
-        color: "#9ca3af",
-        fontSize: 14,
-        marginTop: 20,
-    },
-});

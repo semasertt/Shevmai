@@ -163,10 +163,10 @@ export default function HomeScreen() {
                     )}
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{paddingHorizontal: 16}}
+                    scrollEnabled={true}
                 />
 
                 {/* 📌 Son Kayıtlar */}
-                <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Son Kayıtlar</Text>
                 <Timeline items={records}/>
             </ScrollView>
         </>

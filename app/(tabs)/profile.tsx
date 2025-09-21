@@ -185,6 +185,7 @@ export default function ProfileScreen() {
             {/* 📌 İçerik */}
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
                 {/* 👤 Çocuk Bilgileri */}
+
                 <View style={{ marginBottom: 20 }}>
                     <View style={{ alignItems: "center" }}>
                         <TouchableOpacity onPress={pickImage} disabled={loading}>
@@ -204,6 +205,8 @@ export default function ProfileScreen() {
 
                         <Text style={commonStyles.name}>{currentChild.name}</Text>
                     </View>
+                    <Text style={commonStyles.sectionTitle}>👶 Çocuk Bilgileri</Text>
+
 
                     {["birthdate", "height", "weight", "sleep_pattern"].map((field) => (
                         <Text key={field} style={commonStyles.detail}>

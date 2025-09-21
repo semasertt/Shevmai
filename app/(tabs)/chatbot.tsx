@@ -48,9 +48,9 @@ export default function Chatbot() {
     const [showSidebar, setShowSidebar] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState(false);
     const [activeEventId, setActiveEventId] = useState<string | null>(null);
-// hangi event için detay soruluyor
-    const [pendingDetail, setPendingDetail] = useState<string | null>(null);
-
+// // 🔄 Artık useRef ile takip edilecek
+     const pendingQuestionRef = useRef(false);
+    const pendingDetailRef = useRef<string | null>(null);
     const flatListRef = useRef<FlatList>(null);
 
     useEffect(() => {
@@ -95,24 +95,25 @@ export default function Chatbot() {
         setLoading(true);
 // 0. Konuşma geçmişini hazırla
         const conversationHistory = messages
-            .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
+            .map((m) => `${m.role === "user" ? "Ebeveyn" : "ShevmAI"}: ${m.text}`)
             .join("\n");
 
         try {
             console.log("📝 Kullanıcı mesajı:", userMessage);
 
             // 1. Eğer önceki bir soruya cevap veriyorsa, FOLLOWUP_PROMPT kullan
-            if (pendingQuestion && pendingDetail) {
+            if (pendingQuestionRef.current && pendingDetailRef.current) {
                 console.log("🔄 Önceki soruya cevap (FOLLOWUP_PROMPT)");
-// Belirsiz → FOLLOWUP
                 const followup = await askGeminiAPI(
                     `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
                     makeFollowupPrompt(childContext)
                 );
 
-
                 setMessages((prev) => [...prev, {role: "bot", type: "text", text: followup}]);
 
+                // ✅ Tekrar followup moduna girmesin
+                pendingQuestionRef.current = false;
+                pendingDetailRef.current = null;
                 return;
             }
 
@@ -124,7 +125,7 @@ export default function Chatbot() {
                 // ❌ Sadece sohbet
                 const aiResult = await askGeminiAPI(
                     `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
-                    "Sadece sohbet et, kısa cevap ver."
+                    "sadece sohbet et.Samimi ol."
                 );
                 setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiResult}]);
                 return;
@@ -155,8 +156,8 @@ export default function Chatbot() {
                     ...prev,
                     {role: "bot", type: "text", text: result.questions[0]},
                 ]);
-                setPendingDetail(result.eventId || activeEventId);
-                setPendingQuestion(true); // Sonraki mesajlar için FOLLOWUP modu
+                pendingDetailRef.current = result.eventId || activeEventId;
+                pendingQuestionRef.current = true;
             }
 
         } catch (err) {
@@ -182,7 +183,7 @@ export default function Chatbot() {
 - Kilo: ${child.weight || "bilinmiyor"}
 ` : "Çocuk bilgisi seçilmedi.";
         const conversationHistory = messages
-            .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
+            .map((m) => `${m.role === "user" ? "Ebeveyn" : "ShevmAI"}: ${m.text}`)
             .join("\n");
 
         try {
@@ -202,9 +203,10 @@ export default function Chatbot() {
                 const aiAnswer = await analyzeImage(
                     img.base64!,
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
-                    "Bu görseli kısa bir şekilde yorumla, sadece sohbet et."
+                    "Bu görseli kısa bir şekilde yorumla, sadece sohbet et.Samimi ol."
                 );
                 setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiAnswer}]);
+
                 return;
             }
 
@@ -212,8 +214,17 @@ export default function Chatbot() {
             const aiResult = await analyzeImage(
                 img.base64!,
                 `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
-                makeBasePrompt(childContext)
+                `
+    ${makeBasePrompt(childContext)}
+
+    Ekstra kural:
+    - Eğer görsel bir tahlil sonucu (kan, idrar, laboratuvar raporu) içeriyorsa
+      → değerleri çocuğun yaşı, kilosu ve cinsiyetine göre yorumla.
+      → Normal aralıklarla kıyas yap, yüksek/düşükse açıkla.
+      → JSON içindeki "analysis" ve "advice" alanlarına bu kıyaslamayı yaz.
+    `
             );
+
 
             const aiAnswer = await analyzeImage(
                 img.base64!,
@@ -226,8 +237,9 @@ export default function Chatbot() {
             const result = await processAIResult(
                 aiResult,
                 img.uri,
-                activeEventId || pendingDetail
+                activeEventId || pendingDetailRef.current
             );
+
             console.log("💾 Görsel işlendi ID:", result.eventId);
 
             if (result.eventId && !activeEventId) {
@@ -245,8 +257,8 @@ export default function Chatbot() {
                     ...prev,
                     {role: "bot", type: "text", text: result.questions[0]},
                 ]);
-                setPendingDetail(result.eventId || activeEventId);
-                setPendingQuestion(true);
+                pendingDetailRef.current = result.eventId || activeEventId;
+                pendingQuestionRef.current = true;
             }
 
         } catch (err) {
@@ -270,7 +282,7 @@ export default function Chatbot() {
 - Kilo: ${child.weight || "bilinmiyor"}
 ` : "Çocuk bilgisi seçilmedi.";
         const conversationHistory = messages
-            .map((m) => `${m.role === "user" ? "Ebeveyn" : "Copi"}: ${m.text}`)
+            .map((m) => `${m.role === "user" ? "Ebeveyn" : "ShevmAI"}: ${m.text}`)
             .join("\n");
 
         try {
@@ -290,7 +302,7 @@ export default function Chatbot() {
                 const aiAnswer = await analyzeImage(
                     img.base64!,
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
-                    "Bu görseli kısa bir şekilde yorumla, sadece sohbet et."
+                    "Bu görseli kısa bir şekilde yorumla, sadece sohbet et.Samimi ol."
                 );
                 setMessages((prev) => [...prev, {role: "bot", type: "text", text: aiAnswer}]);
                 return;
@@ -300,8 +312,17 @@ export default function Chatbot() {
             const aiResult = await analyzeImage(
                 img.base64!,
                 `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
-                makeBasePrompt(childContext)
+                `
+    ${makeBasePrompt(childContext)}
+
+    Ekstra kural:
+    - Eğer görsel bir tahlil sonucu (kan, idrar, laboratuvar raporu) içeriyorsa
+      → değerleri çocuğun yaşı, kilosu ve cinsiyetine göre yorumla.
+      → Normal aralıklarla kıyas yap, yüksek/düşükse açıkla.
+      → JSON içindeki "analysis" ve "advice" alanlarına bu kıyaslamayı yaz.
+    `
             );
+
 
             const aiAnswer = await analyzeImage(
                 img.base64!,
@@ -310,12 +331,12 @@ export default function Chatbot() {
             );
 
 
-            // 4. JSON'u işle ve DB'ye kaydet (aktif kayıt varsa append edecek!)
             const result = await processAIResult(
                 aiResult,
                 img.uri,
-                activeEventId || pendingDetail
+                activeEventId || pendingDetailRef.current
             );
+
             console.log("💾 Görsel işlendi ID:", result.eventId);
 
             if (result.eventId && !activeEventId) {
@@ -333,8 +354,8 @@ export default function Chatbot() {
                     ...prev,
                     {role: "bot", type: "text", text: result.questions[0]},
                 ]);
-                setPendingDetail(result.eventId || activeEventId);
-                setPendingQuestion(true);
+                pendingDetailRef.current = result.eventId || activeEventId;
+                pendingQuestionRef.current = true;
             }
 
         } catch (err) {
@@ -361,7 +382,8 @@ export default function Chatbot() {
 
         // 2. Event state'lerini temizle (yeni sistem)
         setActiveEventId(null);
-        setPendingDetail(null);
+        pendingQuestionRef.current = false;
+        pendingDetailRef.current = null;
     };
     return (
         <KeyboardAvoidingView
