@@ -120,16 +120,34 @@ export function AttackPeriodsView() {
     }
 
     return (
-        <View style={[commonStyles.header, { flexDirection: "row", alignItems: "center" }]}>
-            <TouchableOpacity onPress={() => router.back()} style={{ padding: 8, marginRight: 8 }}>
-                <Ionicons name="arrow-back" size={24} color="#fff" />
-            </TouchableOpacity>            {/* Header */}
-            <View style={commonStyles.header}>
+        <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View
+                style={[
+                    commonStyles.header,
+                    { flexDirection: "row", alignItems: "center", justifyContent: "center" },
+                ]}
+            >
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={{
+                        marginTop:45,
+                        position: "absolute",
+                        left: 8,
+                        justifyContent: "center",
+                        height: "100%",
+                        paddingHorizontal: 8,
+                    }}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#000000" />
+                </TouchableOpacity>
+
                 <Text style={commonStyles.headerTitle}>
                     ⚡ {child.name} için Atak Dönemleri
                 </Text>
             </View>
 
+            {/* İçerik */}
             <FlatList
                 style={[commonStyles.page, { marginTop: 12 }]}
                 data={periods}
@@ -161,21 +179,15 @@ export function AttackPeriodsView() {
 
                             {/* Durum Row */}
                             <View style={commonStyles.statusRow}>
-                                <View
-                                    style={[commonStyles.statusDot, statusStyle.dot]}
-                                />
-                                <Text
-                                    style={[commonStyles.statusText, statusStyle.text]}
-                                >
+                                <View style={[commonStyles.statusDot, statusStyle.dot]} />
+                                <Text style={[commonStyles.statusText, statusStyle.text]}>
                                     {item.status}
                                 </Text>
                             </View>
 
                             {/* Açılır Detay */}
                             {isOpen && (
-                                <Text style={commonStyles.vaccineDesc}>
-                                    {item.description}
-                                </Text>
+                                <Text style={commonStyles.vaccineDesc}>{item.description}</Text>
                             )}
                         </TouchableOpacity>
                     );
@@ -189,4 +201,5 @@ export function AttackPeriodsView() {
             />
         </View>
     );
+
 }

@@ -101,11 +101,28 @@ export function VaccineScheduleView() {
     }
 
     return (
-        <View style={commonStyles.header}>
-            <TouchableOpacity onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={24} color="#000000" />
-            </TouchableOpacity>            {/* Header */}
-            <View style={commonStyles.header}>
+        <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View
+                style={[
+                    commonStyles.header,
+                    { flexDirection: "row", alignItems: "center", justifyContent: "center" },
+                ]}
+            >
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    style={{
+                        marginTop:45,
+                        position: "absolute",
+                        left: 8,
+                        justifyContent: "center",
+                        height: "100%",
+                        paddingHorizontal: 8,
+                    }}
+                >
+                    <Ionicons name="arrow-back" size={24} color="#000000" />
+                </TouchableOpacity>
+
                 <Text style={commonStyles.headerTitle}>
                     💉 {child.name} için Aşı Takvimi
                 </Text>

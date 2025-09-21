@@ -111,7 +111,7 @@ export default function Chatbot() {
 
                 setMessages((prev) => [...prev, {role: "bot", type: "text", text: followup}]);
 
-                // ✅ Tekrar followup moduna girmesin
+
                 pendingQuestionRef.current = false;
                 pendingDetailRef.current = null;
                 return;
@@ -122,7 +122,7 @@ export default function Chatbot() {
             console.log("📋 Kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // ❌ Sadece sohbet
+                //Sadece sohbet
                 const aiResult = await askGeminiAPI(
                     `${conversationHistory}\nEbeveyn: ${newMessage.text}`,
                     "sadece sohbet et.Samimi ol."
@@ -161,7 +161,7 @@ export default function Chatbot() {
             }
 
         } catch (err) {
-            console.error("❌ askGemini error:", err);
+            console.error(" askGemini error:", err);
             setMessages((prev) => [
                 ...prev,
                 {role: "bot", type: "text", text: "⚠️ Hata oluştu."},
@@ -199,7 +199,7 @@ export default function Chatbot() {
             console.log("📋 Görsel kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // ❌ Sadece sohbet
+                //  Sadece sohbet
                 const aiAnswer = await analyzeImage(
                     img.base64!,
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
@@ -210,7 +210,7 @@ export default function Chatbot() {
                 return;
             }
 
-            // 2. ✅ Kayıt değerse, BASE_PROMPT ile analiz et
+            //  Kayıt değerse, BASE_PROMPT ile analiz et
             const aiResult = await analyzeImage(
                 img.base64!,
                 `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
@@ -262,7 +262,7 @@ export default function Chatbot() {
             }
 
         } catch (err) {
-            console.error("❌ handleGallery error:", err);
+            console.error(" handleGallery error:", err);
             setMessages((prev) => [
                 ...prev,
                 {role: "bot", type: "text", text: "⚠️ Görsel işlenirken hata oluştu."},
@@ -298,7 +298,7 @@ export default function Chatbot() {
             console.log("📋 Görsel kayıt değer mi:", shouldSave);
 
             if (!shouldSave) {
-                // ❌ Sadece sohbet
+                //  Sadece sohbet
                 const aiAnswer = await analyzeImage(
                     img.base64!,
                     `${conversationHistory}\nEbeveyn: Görsel yüklendi.`,
@@ -308,7 +308,7 @@ export default function Chatbot() {
                 return;
             }
 
-            // 2. ✅ Kayıt değerse, BASE_PROMPT ile analiz et
+            //  Kayıt değerse, BASE_PROMPT ile analiz et
             const aiResult = await analyzeImage(
                 img.base64!,
                 `${conversationHistory}\n${childContext}\nEbeveyn: Görsel yüklendi.`,
@@ -370,7 +370,6 @@ export default function Chatbot() {
     };
 
     const startNewConversation = () => {
-        // 1. Konuşma geçmişini kaydet (eski sistem)
         const newConv = {
             id: Date.now(),
             title: `Konuşma ${conversations.length + 1}`,
@@ -380,7 +379,7 @@ export default function Chatbot() {
         setActiveConv(newConv.id);
         setMessages(newConv.messages);
 
-        // 2. Event state'lerini temizle (yeni sistem)
+        //  Event state'lerini temizle
         setActiveEventId(null);
         pendingQuestionRef.current = false;
         pendingDetailRef.current = null;
@@ -397,7 +396,7 @@ export default function Chatbot() {
                 barStyle="dark-content"   // yazılar siyah olsun
             />
 
-            {/* 📌 Header (ScrollView dışında sabit) */}
+            {/*  Header */}
             <View>
                 <View style={commonStyles.header}>
                     <TouchableOpacity
@@ -418,19 +417,41 @@ export default function Chatbot() {
                 </View>
             </View>
 
+            {/*  Uyarı Yazısı */}
+            <View style={{ padding: 6, alignItems: "center" }}>
+                <Text style={{ fontSize: 15, color: "#555", opacity: 0.5 }}>
+                     Chatbot hata yapabilir. Önemli bilgileri kontrol edin.
+                </Text>
+            </View>
 
-            {/* 📌 Mesajlar */}
+
+            {/*  Mesajlar */}
             <FlatList
                 ref={flatListRef}
                 data={messages}
-                renderItem={({item}) => <ChatMessage item={item}/>}
+                renderItem={({ item }) => <ChatMessage item={item} />}
                 keyExtractor={(_, index) => index.toString()}
                 contentContainerStyle={{
                     ...commonStyles.chatContainer,
+                    flexGrow: 1,
+                    justifyContent: "flex-end",
                 }}
+                keyboardShouldPersistTaps="handled"
             />
+            {loading && (
+                <View style={{ padding: 10, alignItems: "flex-start" }}>
+                    <View style={{
+                        backgroundColor: "#eee",
+                        borderRadius: 16,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8
+                    }}>
+                        <Text style={{ color: "#555" }}>ShevmAI yazıyor...</Text>
+                    </View>
+                </View>
+            )}
 
-            {/* 📌 Input */}
+            {/*  Input */}
             <View style={commonStyles.inputContainer}>
                 <TouchableOpacity onPress={handleGallery}>
                     <Ionicons
@@ -468,7 +489,7 @@ export default function Chatbot() {
                 </TouchableOpacity>
             </View>
 
-            {/* 📌 Sidebar */}
+            {/* Sidebar */}
             <Modal visible={showSidebar} animationType="slide" transparent>
                 <View style={commonStyles.sidebarOverlay}>
                     <View style={commonStyles.sidebarContainer}>
