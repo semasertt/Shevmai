@@ -15,9 +15,12 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
-import { commonStyles } from "@/src/styles/common";
+import { useTheme } from "@/src/context/ThemeContext";
+
 
 export default function AddChildScreen() {
+    const { commonStyles } = useTheme();
+
     const [childName, setChildName] = useState("");
     const [birthDate, setBirthDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
@@ -75,6 +78,7 @@ export default function AddChildScreen() {
 
     return (
         <KeyboardAvoidingView
+            style={commonStyles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={80}
         >

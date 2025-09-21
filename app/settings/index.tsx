@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Platform, BackHandler } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { fetchChildren, deleteChild } from "@/services/children";
-import { commonStyles } from "@/src/styles/common";
-import { Platform, BackHandler } from "react-native";
+import { useTheme } from "@/src/context/ThemeContext";
 
 export default function SettingsScreen() {
     const [children, setChildren] = useState<any[]>([]);
+    const { isDark, toggleTheme, commonStyles } = useTheme();
 
     // ✅ Çocukları yükle
     useEffect(() => {
@@ -49,7 +49,7 @@ export default function SettingsScreen() {
 
     return (
         <ScrollView style={commonStyles.page}>
-            <Text style={commonStyles.title}>⚙️ Ayarlar</Text>
+            <Text style={commonStyles.headerTitle}>⚙️ Ayarlar</Text>
 
             {/* 🚪 Çıkış Butonu */}
             <TouchableOpacity
@@ -129,10 +129,22 @@ export default function SettingsScreen() {
             {/* 📌 Diğer */}
             <View style={commonStyles.card}>
                 <Text style={commonStyles.sectionTitle}>📌 Diğer</Text>
-                <TouchableOpacity style={commonStyles.settingItem}>
-                    <Ionicons name="color-palette-outline" size={20} color="#f472b6" />
-                    <Text style={commonStyles.settingText}>Tema</Text>
+
+                {/* 🌙 Tema Butonu */}
+                <TouchableOpacity
+                    style={commonStyles.settingItem}
+                    onPress={toggleTheme}
+                >
+                    <Ionicons
+                        name={isDark ? "moon" : "sunny"}
+                        size={20}
+                        color={isDark ? "#facc15" : "#f59e0b"}
+                    />
+                    <Text style={commonStyles.settingText}>
+                        Tema: {isDark ? "Karanlık" : "Aydınlık"}
+                    </Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity style={commonStyles.settingItem}>
                     <Ionicons name="notifications-outline" size={20} color="#38bdf8" />
                     <Text style={commonStyles.settingText}>Bildirimler</Text>

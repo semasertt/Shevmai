@@ -11,15 +11,16 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system/legacy"; // ✅ legacy import
+import * as FileSystem from "expo-file-system/legacy";
 import { decode } from "base64-arraybuffer";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
-import { commonStyles } from "@/src/styles/common";
+import { useTheme } from "@/src/context/ThemeContext";
 import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
+    const { commonStyles } = useTheme();
     const [currentChild, setCurrentChild] = useState<any>(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editFields, setEditFields] = useState<string[]>([]);
@@ -83,12 +84,12 @@ export default function ProfileScreen() {
         );
     }
 
-    // ✅ Resim seç → sadece önizleme için state'e koy
+    // ✅ Resim seç
     const pickImage = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: false, // crop kapalı
+                allowsEditing: false,
                 quality: 0.8,
             });
 
@@ -96,14 +97,14 @@ export default function ProfileScreen() {
 
             const file = result.assets[0];
             setTempImage(file.uri);
-            setPreviewVisible(true); // ✅ modal aç
+            setPreviewVisible(true);
         } catch (error) {
             Alert.alert("Hata", "Resim seçilirken hata oluştu");
             console.error(error);
         }
     };
 
-    // ✅ Kaydet → Supabase upload
+    // ✅ Resim kaydet
     const saveImage = async () => {
         if (!tempImage || !currentChild) return;
         try {
@@ -112,15 +113,11 @@ export default function ProfileScreen() {
             const childId = currentChild.id;
             const filePath = `avatars/${childId}.jpg`;
 
-            // ✅ base64 oku
             const file = await FileSystem.readAsStringAsync(tempImage, {
                 encoding: FileSystem.EncodingType.Base64,
             });
-
-            // ✅ base64 string → ArrayBuffer
             const fileData = decode(file);
 
-            // ✅ Supabase'e yükle
             const { error: uploadError } = await supabase.storage
                 .from("avatars")
                 .upload(filePath, fileData, {
@@ -130,21 +127,20 @@ export default function ProfileScreen() {
 
             if (uploadError) throw uploadError;
 
-            // ✅ Public URL al
             const { data: publicUrlData } = supabase.storage
                 .from("avatars")
                 .getPublicUrl(filePath);
 
-            const avatarUrl = publicUrlData.publicUrl;
+            let avatarUrl = publicUrlData.publicUrl;
+            avatarUrl = `${avatarUrl}?t=${Date.now()}`;
 
-            // ✅ DB güncelle
             await supabase
                 .from("children")
                 .update({ avatar: avatarUrl })
                 .eq("id", childId);
 
-            // ✅ State güncelle
             setCurrentChild({ ...currentChild, avatar: avatarUrl });
+            setFormValues((prev: any) => ({ ...prev, avatar: avatarUrl }));
             setPreviewVisible(false);
             setTempImage(null);
 
@@ -157,7 +153,7 @@ export default function ProfileScreen() {
         }
     };
 
-    // ✅ Bilgi Kaydet
+    // ✅ Bilgi kaydet
     const saveEdit = async () => {
         try {
             const { error } = await supabase
@@ -177,7 +173,7 @@ export default function ProfileScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <SafeAreaView style={commonStyles.page}>
             {/* 📌 Header */}
             <View style={commonStyles.header}>
                 <Text style={commonStyles.headerTitle}>Profil</Text>
@@ -188,8 +184,8 @@ export default function ProfileScreen() {
 
             {/* 📌 İçerik */}
             <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 30 }}>
-                {/* 👤 Çocuk Bilgileri Kartı */}
-                <View style={[commonStyles.card, { marginTop: 20 }]}>
+                {/* 👤 Çocuk Bilgileri */}
+                <View style={{ marginBottom: 20 }}>
                     <View style={{ alignItems: "center" }}>
                         <TouchableOpacity onPress={pickImage} disabled={loading}>
                             {currentChild.avatar ? (
@@ -227,8 +223,8 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* 💊 Sağlık Bilgileri Kartı */}
-                <View style={commonStyles.card}>
+                {/* 💊 Sağlık Bilgileri */}
+                <View style={{ marginBottom: 20 }}>
                     <Text style={commonStyles.sectionTitle}>💊 Sağlık Bilgileri</Text>
                     {["allergies", "vaccines", "illnesses"].map((field) => (
                         <Text key={field} style={commonStyles.detail}>
@@ -248,8 +244,8 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* 📊 Sağlık Özetim Kartı */}
-                <View style={commonStyles.card}>
+                {/* 📊 Sağlık Özetim */}
+                <View style={{ marginBottom: 20 }}>
                     <Text style={commonStyles.sectionTitle}>📊 Sağlık Özetim</Text>
                     <View style={commonStyles.statsGrid}>
                         <View style={commonStyles.statCard}>

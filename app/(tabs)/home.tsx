@@ -12,7 +12,7 @@ import { getSelectedChild } from "@/services/children";
 import CardButton from "../../components/ui/CardButton";
 import Timeline from "@/components/ui/TimelineCalender";
 import { useRouter } from "expo-router";
-import { commonStyles } from "@/src/styles/common";
+import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
@@ -28,6 +28,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export default function HomeScreen() {
+    const { commonStyles } = useTheme();
     const router = useRouter();
     const [records, setRecords] = useState<any[]>([]);
     const [recordsByCategory, setRecordsByCategory] = useState<{ [key: string]: any[] }>({});
@@ -107,7 +108,7 @@ export default function HomeScreen() {
             {/* 📌 İçerik */}
             <ScrollView
                 style={commonStyles.page}
-                contentContainerStyle={{padding: 16, paddingBottom: 30}}
+                contentContainerStyle={{paddingLeft: 16,paddingRight: 16, paddingBottom: 30}}
             >
                 {/* 📌 Kategoriler */}
                 <Text style={[commonStyles.sectionTitle, {marginTop: 24}]}>Kategoriler</Text>

@@ -31,11 +31,13 @@ import {supabase} from "@/lib/supabase";
 import {addFollowUpToEvent} from "@/src/api/saveHealthEvent";
 import {getCurrentChildWithDetails} from "@/services/children";
 import {makeBasePrompt, makeFollowupPrompt} from "@/src/prompts";
-import {commonStyles} from "@/src/styles/common";
+import { useTheme } from "@/src/context/ThemeContext";
+
 
 
 
 export default function Chatbot() {
+    const { commonStyles } = useTheme();
     const [prompt, setPrompt] = useState("");
     const [messages, setMessages] = useState<any[]>([
         {role: "bot", type: "text", text: "Merhaba 👋 Ben senin sağlık asistanın ShevmAI."},
@@ -363,25 +365,24 @@ export default function Chatbot() {
     };
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: "#fff" }}
-
+            style={commonStyles.container}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={Platform.OS === "ios" ? 70 : 0}
         >
             {/* Status Bar */}
             <StatusBar
-                backgroundColor="#f0e4d7" // krem rengi
+                backgroundColor={commonStyles.header.backgroundColor}  // krem rengi
                 barStyle="dark-content"   // yazılar siyah olsun
             />
 
             {/* 📌 Header (ScrollView dışında sabit) */}
-            <SafeAreaView style={commonStyles.safeArea}>
+            <SafeAreaView  style={commonStyles.safeArea} edges={["left", "right", "bottom"]}>
                 <View style={commonStyles.header}>
                     <TouchableOpacity
                         onPress={() => setShowSidebar(true)}
                         style={commonStyles.headerIconLeft}
                     >
-                        <Ionicons name="menu" size={24} color="#5c4033"/>
+                        <Ionicons name="menu" size={24} color="#5c4033" />
                     </TouchableOpacity>
 
                     <Text style={commonStyles.headerTitle}>Chatbot</Text>
@@ -390,10 +391,11 @@ export default function Chatbot() {
                         onPress={startNewConversation}
                         style={commonStyles.headerIconRight}
                     >
-                        <Ionicons name="add-circle" size={26} color="#5c4033"/>
+                        <Ionicons name="add-circle" size={26} color="#5c4033" />
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
+
 
             {/* 📌 Mesajlar */}
             <FlatList
