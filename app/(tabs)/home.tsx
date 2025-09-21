@@ -22,9 +22,9 @@ import { useCallback } from "react";
 const DEFAULT_CATEGORIES = [
     { id: "disease", title: "🤒 Hastalık" },
     { id: "vaccine", title: "💉 Aşı" },
-    { id: "symptom", title: "🌡️ Semptom" },
+    { id: "Semptom", title: "🌡️ Semptom" },
     { id: "nutrition", title: "🍎 Beslenme" },
-    { id: "sleep", title: "😴 Uyku" },
+    { id: "growth", title: "🌱 Büyüme & Gelişme" },
     { id: "test", title: "🧪 Tahlil Sonuçları" },
     { id: "attack", title: "⚡ Atak Dönemleri" },
     { id: "other", title: "📝 Diğer" },
@@ -123,8 +123,13 @@ export default function HomeScreen() {
     };
 
     const handleCategoryPress = (categoryTitle: string) => {
-        const categoryRecords = recordsByCategory[categoryTitle] || [];
-
+        const categoryRecords = (recordsByCategory[categoryTitle] || []).map((r: any) => {
+            // follow_up alanını kaldır
+            const { follow_up, ...rest } = r;
+            return rest;
+        });        console.log("🟢 handleCategoryPress çağrıldı");
+        console.log("➡️ Seçilen kategori:", categoryTitle);
+        console.log("📦 Bu kategorideki kayıtlar:", categoryRecords);
         router.push({
             pathname: "/categories/category",
             params: {
