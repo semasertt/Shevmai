@@ -10,15 +10,17 @@ import {
     Platform,
     Keyboard,
     ScrollView,
+    StatusBar,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useTheme } from "@/src/context/ThemeContext";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignUp() {
-    const { commonStyles } = useTheme();
+    const { commonStyles, isDark, theme } = useTheme();
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -63,7 +65,7 @@ export default function SignUp() {
         const user = signUpData?.user;
         if (!user) return Alert.alert("Hata", "Kullanıcı oluşturulamadı.");
 
-        // 📌 Profil kaydı (duplicate önlemek için upsert)
+        // 📌 Profil kaydı
         const { error: pErr } = await supabase
             .from("profiles")
             .upsert({ id: user.id, username, email }, { onConflict: "id" });
@@ -101,15 +103,43 @@ export default function SignUp() {
 
     return (
         <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={commonStyles.page}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={{ flex: 1 }}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-                <ScrollView contentContainerStyle={commonStyles.scrollContainer}>
-                    <Text style={commonStyles.authTitle}>Kayıt Ol</Text>
+                <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+                    {/* ✅ StatusBar */}
+                    <StatusBar
+                        backgroundColor={theme.headerBg}
+                        barStyle={isDark ? "light-content" : "dark-content"}
+                    />
 
-                    {/* Kullanıcı bilgileri */}
-                    <View style={commonStyles.card}>
+                    {/* ✅ Navbar */}
+                    <View style={commonStyles.header}>
+                        <TouchableOpacity
+                            style={commonStyles.headerIconLeft}
+                            onPress={() => router.replace("/(auth)/sign-in")}
+                        >
+                            <Ionicons
+                                name="arrow-back"
+                                size={24}
+                                color={isDark ? "#fff" : "#000"}
+                            />
+                        </TouchableOpacity>
+                        <Text style={commonStyles.headerTitle}>📝 Kayıt Ol</Text>
+                        <View style={commonStyles.headerIconRight} />
+                    </View>
+
+                    {/* ✅ ScrollView ile form alanları */}
+                    <ScrollView
+                        contentContainerStyle={{
+                            paddingHorizontal: 16,
+                            paddingBottom: 40,
+                        }}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <Text style={commonStyles.sectionTitle}>Profil Bilgileri</Text>
+                        {/* Kullanıcı bilgileri */}
                         <TextInput
                             placeholder="Kullanıcı adı"
                             value={username}
@@ -133,198 +163,201 @@ export default function SignUp() {
                             style={commonStyles.input}
                             placeholderTextColor="#6b7280"
                         />
-                    </View>
 
-                    <Text style={commonStyles.sectionTitle}>Çocuk Bilgileri</Text>
+                        <Text style={commonStyles.sectionTitle}>Çocuk Bilgileri</Text>
 
-                    {/* Adı + Doğum Tarihi */}
-                    <View style={commonStyles.card}>
-                        <TextInput
-                            placeholder="Adı"
-                            value={childName}
-                            onChangeText={setChildName}
-                            style={commonStyles.input}
-                            placeholderTextColor="#6b7280"
-                        />
-
-                        <Text style={commonStyles.label}>Doğum Tarihi</Text>
-                        <TouchableOpacity
-                            onPress={() => setShowDatePicker(true)}
-                            style={commonStyles.input}
-                        >
-                            <Text style={{ color: birthDate ? "#111827" : "#6b7280" }}>
-                                {birthDate
-                                    ? birthDate.toLocaleDateString("tr-TR")
-                                    : "Tarih Seçin"}
-                            </Text>
-                        </TouchableOpacity>
-                        {showDatePicker && (
-                            <DateTimePicker
-                                value={birthDate || new Date()}
-                                mode="date"
-                                display="calendar"
-                                onChange={(event, selectedDate) => {
-                                    setShowDatePicker(false);
-                                    if (selectedDate) setBirthDate(selectedDate);
-                                }}
-                            />
-                        )}
-                    </View>
-
-                    {/* Cinsiyet */}
-                    <View style={commonStyles.card}>
-                        <Text style={commonStyles.label}>Cinsiyet</Text>
-                        <View style={{ flexDirection: "row", marginBottom: 4 }}>
-                            {["Erkek", "Kız"].map((option) => (
-                                <TouchableOpacity
-                                    key={option}
-                                    onPress={() => setGender(option)}
-                                    style={[
-                                        commonStyles.genderBtn,
-                                        gender === option && commonStyles.genderBtnSelected,
-                                    ]}
-                                >
-                                    <Text
-                                        style={[
-                                            commonStyles.genderBtnText,
-                                            gender === option && commonStyles.genderBtnTextSelected,
-                                        ]}
-                                    >
-                                        {option}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-
-                    {/* Boy */}
-                    <View style={commonStyles.card}>
-                        <Text style={commonStyles.label}>Boy (cm)</Text>
-                        <View style={commonStyles.counterRow}>
-                            <TouchableOpacity
-                                onPress={() => setHeight((prev) => Math.max(30, prev - 1))}
-                                style={commonStyles.counterBtn}
-                            >
-                                <Text style={commonStyles.counterText}>-</Text>
-                            </TouchableOpacity>
-
+                        {/* Adı + Doğum Tarihi */}
+                        <View style={commonStyles.card}>
                             <TextInput
-                                value={height.toString()}
-                                onChangeText={(val) => {
-                                    const num = parseInt(val, 10);
-                                    if (!isNaN(num)) setHeight(num);
-                                }}
-                                keyboardType="numeric"
-                                style={[
-                                    commonStyles.input,
-                                    { flex: 1, marginHorizontal: 8, textAlign: "center" },
-                                ]}
+                                placeholder="Adı"
+                                value={childName}
+                                onChangeText={setChildName}
+                                style={commonStyles.input}
+                                placeholderTextColor="#6b7280"
                             />
 
+                            <Text style={commonStyles.label}>Doğum Tarihi</Text>
                             <TouchableOpacity
-                                onPress={() => setHeight((prev) => Math.min(250, prev + 1))}
-                                style={commonStyles.counterBtn}
+                                onPress={() => setShowDatePicker(true)}
+                                style={commonStyles.input}
                             >
-                                <Text style={commonStyles.counterText}>+</Text>
+                                <Text style={{ color: birthDate ? "#111827" : "#6b7280" }}>
+                                    {birthDate
+                                        ? birthDate.toLocaleDateString("tr-TR")
+                                        : "Tarih Seçin"}
+                                </Text>
                             </TouchableOpacity>
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={birthDate || new Date()}
+                                    mode="date"
+                                    display="calendar"
+                                    onChange={(event, selectedDate) => {
+                                        setShowDatePicker(false);
+                                        if (selectedDate) setBirthDate(selectedDate);
+                                    }}
+                                />
+                            )}
                         </View>
-                    </View>
 
-                    {/* Kilo */}
-                    <View style={commonStyles.card}>
-                        <Text style={commonStyles.label}>Kilo (kg)</Text>
-                        <View style={commonStyles.counterRow}>
-                            <TouchableOpacity
-                                onPress={() => setWeight((prev) => Math.max(1, prev - 1))}
-                                style={commonStyles.counterBtn}
-                            >
-                                <Text style={commonStyles.counterText}>-</Text>
-                            </TouchableOpacity>
-
-                            <TextInput
-                                value={weight.toString()}
-                                onChangeText={(val) => {
-                                    const num = parseInt(val, 10);
-                                    if (!isNaN(num)) setWeight(num);
-                                }}
-                                keyboardType="numeric"
-                                style={[
-                                    commonStyles.input,
-                                    { flex: 1, marginHorizontal: 8, textAlign: "center" },
-                                ]}
-                            />
-
-                            <TouchableOpacity
-                                onPress={() => setWeight((prev) => Math.min(200, prev + 1))}
-                                style={commonStyles.counterBtn}
-                            >
-                                <Text style={commonStyles.counterText}>+</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    {/* Uyku Düzeni */}
-                    <View style={commonStyles.card}>
-                        <Text style={commonStyles.label}>Uyku Düzeni</Text>
-                        <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                            {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map(
-                                (option) => (
+                        {/* Cinsiyet */}
+                        <View style={commonStyles.card}>
+                            <Text style={commonStyles.label}>Cinsiyet</Text>
+                            <View style={{ flexDirection: "row", marginBottom: 4 }}>
+                                {["Erkek", "Kız"].map((option) => (
                                     <TouchableOpacity
                                         key={option}
-                                        onPress={() => setSleepPattern(option)}
+                                        onPress={() => setGender(option)}
                                         style={[
                                             commonStyles.genderBtn,
-                                            sleepPattern === option && commonStyles.genderBtnSelected,
+                                            gender === option && commonStyles.genderBtnSelected,
                                         ]}
                                     >
                                         <Text
                                             style={[
                                                 commonStyles.genderBtnText,
-                                                sleepPattern === option &&
+                                                gender === option &&
                                                 commonStyles.genderBtnTextSelected,
                                             ]}
                                         >
                                             {option}
                                         </Text>
                                     </TouchableOpacity>
-                                )
-                            )}
+                                ))}
+                            </View>
                         </View>
-                    </View>
 
-                    {/* Diğer Alanlar */}
-                    <View style={commonStyles.card}>
-                        <TextInput
-                            placeholder="Alerjiler (ör. Fıstık, Polen)"
-                            value={allergies}
-                            onChangeText={setAllergies}
-                            style={commonStyles.input}
-                            placeholderTextColor="#6b7280"
-                        />
-                        <TextInput
-                            placeholder="Aşılar (ör. Kızamık, Tetanoz)"
-                            value={vaccines}
-                            onChangeText={setVaccines}
-                            style={commonStyles.input}
-                            placeholderTextColor="#6b7280"
-                        />
-                        <TextInput
-                            placeholder="Geçirdiği Hastalıklar (ör. Suçiçeği, Grip)"
-                            value={illnesses}
-                            onChangeText={setIllnesses}
-                            style={commonStyles.input}
-                            placeholderTextColor="#6b7280"
-                        />
-                    </View>
+                        {/* Boy */}
+                        <View style={commonStyles.card}>
+                            <Text style={commonStyles.label}>Boy (cm)</Text>
+                            <View style={commonStyles.counterRow}>
+                                <TouchableOpacity
+                                    onPress={() => setHeight((prev) => Math.max(30, prev - 1))}
+                                    style={commonStyles.counterBtn}
+                                >
+                                    <Text style={commonStyles.counterText}>-</Text>
+                                </TouchableOpacity>
 
-                    <TouchableOpacity onPress={onSignUp} style={commonStyles.submitBtn}>
-                        <Text style={commonStyles.submitText}>Kayıt Ol</Text>
-                    </TouchableOpacity>
+                                <TextInput
+                                    value={height.toString()}
+                                    onChangeText={(val) => {
+                                        const num = parseInt(val, 10);
+                                        if (!isNaN(num)) setHeight(num);
+                                    }}
+                                    keyboardType="numeric"
+                                    style={[
+                                        commonStyles.input,
+                                        { flex: 1, marginHorizontal: 8, textAlign: "center" },
+                                    ]}
+                                />
 
-                    <Text style={commonStyles.authLink}>
-                        Zaten hesabın var mı? <Link href="/(auth)/sign-in">Giriş yap</Link>
-                    </Text>
-                </ScrollView>
+                                <TouchableOpacity
+                                    onPress={() => setHeight((prev) => Math.min(250, prev + 1))}
+                                    style={commonStyles.counterBtn}
+                                >
+                                    <Text style={commonStyles.counterText}>+</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Kilo */}
+                        <View style={commonStyles.card}>
+                            <Text style={commonStyles.label}>Kilo (kg)</Text>
+                            <View style={commonStyles.counterRow}>
+                                <TouchableOpacity
+                                    onPress={() => setWeight((prev) => Math.max(1, prev - 1))}
+                                    style={commonStyles.counterBtn}
+                                >
+                                    <Text style={commonStyles.counterText}>-</Text>
+                                </TouchableOpacity>
+
+                                <TextInput
+                                    value={weight.toString()}
+                                    onChangeText={(val) => {
+                                        const num = parseInt(val, 10);
+                                        if (!isNaN(num)) setWeight(num);
+                                    }}
+                                    keyboardType="numeric"
+                                    style={[
+                                        commonStyles.input,
+                                        { flex: 1, marginHorizontal: 8, textAlign: "center" },
+                                    ]}
+                                />
+
+                                <TouchableOpacity
+                                    onPress={() => setWeight((prev) => Math.min(200, prev + 1))}
+                                    style={commonStyles.counterBtn}
+                                >
+                                    <Text style={commonStyles.counterText}>+</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Uyku Düzeni */}
+                        <View style={commonStyles.card}>
+                            <Text style={commonStyles.label}>Uyku Düzeni</Text>
+                            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                {["0-3 saat", "3-6 saat", "6-9 saat", "9-12 saat"].map(
+                                    (option) => (
+                                        <TouchableOpacity
+                                            key={option}
+                                            onPress={() => setSleepPattern(option)}
+                                            style={[
+                                                commonStyles.genderBtn,
+                                                sleepPattern === option &&
+                                                commonStyles.genderBtnSelected,
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    commonStyles.genderBtnText,
+                                                    sleepPattern === option &&
+                                                    commonStyles.genderBtnTextSelected,
+                                                ]}
+                                            >
+                                                {option}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )
+                                )}
+                            </View>
+                        </View>
+
+                        {/* Diğer Alanlar: Alerji, Aşı, Hastalık */}
+                        <View style={commonStyles.card}>
+                            <TextInput
+                                placeholder="Alerjiler (ör. Fıstık, Polen)"
+                                value={allergies}
+                                onChangeText={setAllergies}
+                                style={commonStyles.input}
+                                placeholderTextColor="#6b7280"
+                            />
+                            <TextInput
+                                placeholder="Aşılar (ör. Kızamık, Tetanoz)"
+                                value={vaccines}
+                                onChangeText={setVaccines}
+                                style={commonStyles.input}
+                                placeholderTextColor="#6b7280"
+                            />
+                            <TextInput
+                                placeholder="Geçirdiği Hastalıklar (ör. Suçiçeği, Grip)"
+                                value={illnesses}
+                                onChangeText={setIllnesses}
+                                style={commonStyles.input}
+                                placeholderTextColor="#6b7280"
+                            />
+                        </View>
+
+                        {/* Kayıt Butonu */}
+                        <TouchableOpacity onPress={onSignUp} style={commonStyles.submitBtn}>
+                            <Text style={commonStyles.submitText}>Kayıt Ol</Text>
+                        </TouchableOpacity>
+
+                        <Text style={commonStyles.authLink}>
+                            Zaten hesabın var mı? <Link href="/(auth)/sign-in">Giriş yap</Link>
+                        </Text>
+                    </ScrollView>
+                </SafeAreaView>
             </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
     );

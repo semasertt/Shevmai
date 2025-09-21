@@ -7,7 +7,7 @@ export const getCommonStyles = (isDark: boolean) => {
     return StyleSheet.create({
         // GENEL
         container: { flex: 1, backgroundColor: theme.background, paddingBottom: 32 },
-        page: { flex: 1, backgroundColor: theme.background, paddingBottom: 32 },
+        page: { flex: 1, backgroundColor: theme.background, paddingBottom: 32},
         sectionTitle: { color: theme.text, fontSize: 18, fontWeight: "700", marginBottom: 10 },
 
         // ONBOARDING

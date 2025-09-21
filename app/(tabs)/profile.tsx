@@ -20,7 +20,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileScreen() {
-    const { commonStyles } = useTheme();
+    const { commonStyles, theme, isDark } = useTheme();
     const [currentChild, setCurrentChild] = useState<any>(null);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editFields, setEditFields] = useState<string[]>([]);
@@ -78,7 +78,7 @@ export default function ProfileScreen() {
 
     if (!currentChild) {
         return (
-            <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: theme.background}}>
                 <Text style={commonStyles.emptyText}>Yükleniyor...</Text>
             </SafeAreaView>
         );
@@ -173,7 +173,7 @@ export default function ProfileScreen() {
     };
 
     return (
-        <SafeAreaView style={commonStyles.page}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             {/* 📌 Header */}
             <View style={commonStyles.header}>
                 <Text style={commonStyles.headerTitle}>Profil</Text>
