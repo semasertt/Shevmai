@@ -24,7 +24,7 @@ const DEFAULT_CATEGORIES = [
     { id: "vaccine", title: "💉 Aşı" },
     { id: "symptom", title: "🌡️ Semptom" },
     { id: "nutrition", title: "🍎 Beslenme" },
-    { id: "sleep", title: "😴 Uyku" },
+    { id: "growth", title: "🌱 Büyüme & Gelişme" },
     { id: "test", title: "🧪 Tahlil Sonuçları" },
     { id: "attack", title: "⚡ Atak Dönemleri" },
     { id: "other", title: "📝 Diğer" },

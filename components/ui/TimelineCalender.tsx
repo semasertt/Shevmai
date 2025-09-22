@@ -21,7 +21,7 @@ export interface HealthCard {
     category: HealthCategory;
     title: string;
     subtitle?: string;
-    date: string;
+    dateISO: string;
     summary?: string;
     advice?: string;
     image_url?: string;
@@ -70,8 +70,8 @@ export default function Timeline({ items }: Props) {
                                         ]}
                                     />
                                     <Text style={commonStyles.vaccineTitle}>{item.title}</Text>
-                                    {item.date && (
-                                        <Text style={commonStyles.recordSub}>  •  {item.date}</Text>
+                                    {item.dateISO && (
+                                        <Text style={commonStyles.recordSub}>  •  {item.dateISO}</Text>
                                     )}
                                 </View>
                             </View>
@@ -82,12 +82,6 @@ export default function Timeline({ items }: Props) {
                                     {item.summary ? (
                                         <Text style={commonStyles.vaccineDesc}>
                                             {item.summary}
-                                        </Text>
-                                    ) : null}
-
-                                    {item.advice ? (
-                                        <Text style={commonStyles.vaccineDesc}>
-                                            {item.advice}
                                         </Text>
                                     ) : null}
 
@@ -102,8 +96,10 @@ export default function Timeline({ items }: Props) {
                             )}
                         </TouchableOpacity>
                     );
+
                 }}
-                scrollEnabled={false}
+                scrollEnabled={false}   // ✅ dış ScrollView kaydırsın
+
             />
         </View>
     );

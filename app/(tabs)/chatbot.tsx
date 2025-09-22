@@ -471,7 +471,7 @@ export default function Chatbot() {
                 </TouchableOpacity>
                 <TextInput
                     style={commonStyles.inputChat}
-                    placeholder="Bir şeyler yaz..."
+                    placeholder="Bir şeyler sor..."
                     placeholderTextColor="#94a3b8"
                     value={prompt}
                     onChangeText={setPrompt}

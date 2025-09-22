@@ -1,7 +1,9 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "baseUrl": ".",
     "strict": true,
     "paths": {

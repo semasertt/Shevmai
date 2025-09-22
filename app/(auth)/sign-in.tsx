@@ -15,6 +15,8 @@ import { supabase } from "@/lib/supabase";
 import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
+import { KeyboardAccessoryView } from "react-native-keyboard-accessory";
+import { setSelectedChild } from "@/services/children";
 
 
 async function resolveEmail(identity: string): Promise<string | null> {
@@ -25,6 +27,7 @@ async function resolveEmail(identity: string): Promise<string | null> {
         .select("email")
         .eq("username", identity)
         .maybeSingle();
+
 
     if (error) {
         Alert.alert("Giriş Hatası", error.message);

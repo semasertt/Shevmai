@@ -5,6 +5,26 @@ export const getCommonStyles = (isDark: boolean) => {
     const theme = isDark ? darkTheme : lightTheme;
 
     return StyleSheet.create({
+        tipCard: {
+            backgroundColor: "#fff",
+            borderRadius: 12,
+            padding: 14,
+            marginBottom: 12,
+            shadowColor: "#000",
+            shadowOpacity: 0.08,
+            shadowRadius: 6,
+            elevation: 2,
+        },
+        tipTitle: {
+            fontWeight: "600",
+            color: "#5c4033",
+            fontSize: 16,
+        },
+        tipText: {
+            color: "#444",
+            fontSize: 14,
+        },
+
         statusRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },
         statusDot: {
             width: 10,

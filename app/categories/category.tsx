@@ -6,6 +6,9 @@ import {VaccineScheduleView} from "@/app/categories/VaccineScheduleView";
 import {AttackPeriodsView} from "@/app/categories/AttackPeriodsView";
 import {Ionicons} from "@expo/vector-icons";
 import React, { useState } from "react";
+import {NutritionView} from "@/app/categories/NutritionWiev";
+import {GrowthView} from "@/app/categories/GrowthView";
+
 
 export default function CategoryPage() {
     const { category, records } = useLocalSearchParams<{ category: string; records?: string }>();
@@ -26,6 +29,12 @@ export default function CategoryPage() {
     if (category === "⚡ Atak Dönemleri") {
         return <AttackPeriodsView />;
     }
+    if (category === "🌱 Büyüme & Gelişme") {
+        return <GrowthView />;
+    }
+    if (category === "🍎 Beslenme") {
+        return <NutritionView />;
+    }
 
     return (
         <View style={{ flex: 1 }}>
@@ -35,6 +44,8 @@ export default function CategoryPage() {
                     <Ionicons name="arrow-back" size={24} color="#111111" />
                 </TouchableOpacity>
                 <Text style={commonStyles.headerTitle}>{category}</Text>
+                <View style={{ width: 40 }} />
+
             </View>
 
             {parsedRecords.length > 0 ? (
@@ -58,6 +69,7 @@ export default function CategoryPage() {
                                         {item.date && (
                                             <Text style={commonStyles.recordSub}>  •  {item.date}</Text>
                                         )}
+
                                     </View>
                                 </View>
 

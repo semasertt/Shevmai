@@ -11,6 +11,7 @@ import {
     Keyboard,
     ScrollView,
     StatusBar,
+    Modal
 } from "react-native";
 import { Link, router } from "expo-router";
 import { supabase } from "@/lib/supabase";
@@ -18,6 +19,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useTheme } from "@/src/context/ThemeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { ALLERGIES, DISEASES, VACCINES } from "@/app/(tabs)/profile";
+import { setSelectedChild } from "@/services/children";
 
 export default function SignUp() {
     const { commonStyles, isDark, theme } = useTheme();
@@ -33,9 +36,25 @@ export default function SignUp() {
     const [height, setHeight] = useState(100);
     const [weight, setWeight] = useState(10);
     const [sleepPattern, setSleepPattern] = useState("");
-    const [allergies, setAllergies] = useState("");
-    const [vaccines, setVaccines] = useState("");
-    const [illnesses, setIllnesses] = useState("");
+    const [allergies, setAllergies] = useState<string[]>([]);
+    const [vaccines, setVaccines] = useState<string[]>([]);
+    const [illnesses, setIllnesses] = useState<string[]>([]);
+    const Chip = ({ label, selected, onPress, color }: any) => (
+        <TouchableOpacity
+            onPress={onPress}
+            style={{
+                backgroundColor: selected ? color : "#e5e7eb",
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
+                margin: 4,
+            }}
+        >
+            <Text style={{ color: selected ? "#fff" : "#111", fontSize: 14 }}>
+                {label}
+            </Text>
+        </TouchableOpacity>
+    );
 
     const onSignUp = async () => {
         if (!username.trim() || !email.trim() || !password.trim()) {
@@ -44,6 +63,7 @@ export default function SignUp() {
         if (!childName.trim()) {
             return Alert.alert("Uyarı", "Çocuğun adı gerekli.");
         }
+
 
         // 🔎 Username kontrolü
         const { data: existingUser, error: checkErr } = await supabase
@@ -82,12 +102,13 @@ export default function SignUp() {
                 height: height.toString(),
                 weight: weight.toString(),
                 sleep_pattern: sleepPattern,
-                allergies,
-                vaccines,
-                illnesses,
+                allergies: Array.isArray(allergies) ? allergies.join(", ") : allergies,
+                vaccines: Array.isArray(vaccines) ? vaccines.join(", ") : vaccines,
+                illnesses: Array.isArray(illnesses) ? illnesses.join(", ") : illnesses,
             })
             .select()
             .single();
+
 
         if (cErr) return Alert.alert("Çocuk Kaydı Hatası", cErr.message);
 
@@ -97,11 +118,16 @@ export default function SignUp() {
             .update({ selected_child_id: childData.id })
             .eq("id", user.id);
 
+      // ✅ Local de güncellensin
+        await setSelectedChild(childData.id);
+
+
         Alert.alert("Başarılı", "Hesap ve çocuk bilgileri oluşturuldu.");
         router.replace("/(tabs)/home");
     };
 
     return (
+
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : undefined}
             style={{ flex: 1 }}
@@ -189,16 +215,27 @@ export default function SignUp() {
                                 </Text>
                             </TouchableOpacity>
                             {showDatePicker && (
-                                <DateTimePicker
-                                    value={birthDate || new Date()}
-                                    mode="date"
-                                    display="calendar"
-                                    onChange={(event, selectedDate) => {
-                                        setShowDatePicker(false);
-                                        if (selectedDate) setBirthDate(selectedDate);
-                                    }}
-                                />
+                                <Modal transparent animationType="fade">
+                                    <TouchableWithoutFeedback onPress={() => setShowDatePicker(false)}>
+                                        <View style={{ flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.3)" }}>
+                                            <View style={{ backgroundColor: "#fff", borderRadius: 12, padding: 10, margin: 20 }}>
+                                                <DateTimePicker
+                                                    value={birthDate ?? new Date()}
+                                                    mode="date"
+                                                    display={Platform.OS === "ios" ? "spinner" : "calendar"}
+                                                    onChange={(event, selectedDate) => {
+                                                        if (event.type === "set" && selectedDate) {
+                                                            setBirthDate(selectedDate);
+                                                        }
+                                                        setShowDatePicker(false);
+                                                    }}
+                                                />
+                                            </View>
+                                        </View>
+                                    </TouchableWithoutFeedback>
+                                </Modal>
                             )}
+
                         </View>
 
                         {/* Cinsiyet */}
@@ -324,30 +361,59 @@ export default function SignUp() {
                             </View>
                         </View>
 
-                        {/* Diğer Alanlar: Alerji, Aşı, Hastalık */}
                         <View style={commonStyles.card}>
-                            <TextInput
-                                placeholder="Alerjiler (ör. Fıstık, Polen)"
-                                value={allergies}
-                                onChangeText={setAllergies}
-                                style={commonStyles.input}
-                                placeholderTextColor="#6b7280"
-                            />
-                            <TextInput
-                                placeholder="Aşılar (ör. Kızamık, Tetanoz)"
-                                value={vaccines}
-                                onChangeText={setVaccines}
-                                style={commonStyles.input}
-                                placeholderTextColor="#6b7280"
-                            />
-                            <TextInput
-                                placeholder="Geçirdiği Hastalıklar (ör. Suçiçeği, Grip)"
-                                value={illnesses}
-                                onChangeText={setIllnesses}
-                                style={commonStyles.input}
-                                placeholderTextColor="#6b7280"
-                            />
+                            <Text style={commonStyles.label}>Alerjiler</Text>
+                            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                {ALLERGIES.map((item) => (
+                                    <Chip
+                                        key={item}
+                                        label={item}
+                                        selected={allergies.includes(item)}
+                                        onPress={() => {
+                                            setAllergies((prev) =>
+                                                prev.includes(item) ? prev.filter((v) => v !== item) : [...prev, item]
+                                            );
+                                        }}
+                                        color="#60a5fa"
+                                    />
+                                ))}
+                            </View>
+
+                            <Text style={commonStyles.label}>Aşılar</Text>
+                            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                {VACCINES.map((item) => (
+                                    <Chip
+                                        key={item}
+                                        label={item}
+                                        selected={vaccines.includes(item)}
+                                        onPress={() => {
+                                            setVaccines((prev) =>
+                                                prev.includes(item) ? prev.filter((v) => v !== item) : [...prev, item]
+                                            );
+                                        }}
+                                        color="#f59e0b"
+                                    />
+                                ))}
+                            </View>
+
+                            <Text style={commonStyles.label}>Hastalıklar</Text>
+                            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                                {DISEASES.map((item) => (
+                                    <Chip
+                                        key={item}
+                                        label={item}
+                                        selected={illnesses.includes(item)}
+                                        onPress={() => {
+                                            setIllnesses((prev) =>
+                                                prev.includes(item) ? prev.filter((v) => v !== item) : [...prev, item]
+                                            );
+                                        }}
+                                        color="#34d399"
+                                    />
+                                ))}
+                            </View>
                         </View>
+
 
                         {/* Kayıt Butonu */}
                         <TouchableOpacity onPress={onSignUp} style={commonStyles.submitBtn}>

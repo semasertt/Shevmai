@@ -1,17 +1,21 @@
 import React from "react";
 import { ThemeProvider } from "@/src/context/ThemeContext";
-import { Tabs } from "expo-router";
+import { Tabs, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LogBox } from "react-native";
+
+// ✅ Uyarıları gizle
+LogBox.ignoreLogs([
+    "Route .* is missing the required default export",
+    "Linking requires a build-time setting `scheme`",
+]);
+LogBox.ignoreAllLogs(false); // false = sadece yukarıdaki listeyi gizler
 
 function TabsLayout() {
-    // useTheme BURADA olabilir (çünkü ThemeProvider üstte olacak)
-    // const { commonStyles, isDark } = useTheme();
-
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
-                // şimdilik commonStyles yerine direkt style veriyoruz
                 tabBarStyle: { backgroundColor: "#f5ede3", height: 90 },
                 tabBarActiveTintColor: "#b47e5d",
                 tabBarInactiveTintColor: "#9ca3af",
@@ -52,10 +56,14 @@ function TabsLayout() {
     );
 }
 
+// ✅ Tek bir default export bırakıyoruz
 export default function RootLayout() {
     return (
         <ThemeProvider>
-            <TabsLayout />
+            <Stack screenOptions={{ headerShown: false }}>
+                {/* Tabs layout'u stack içine koy */}
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
         </ThemeProvider>
     );
 }
