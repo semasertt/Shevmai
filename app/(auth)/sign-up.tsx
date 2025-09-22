@@ -22,6 +22,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ALLERGIES, DISEASES, VACCINES } from "@/app/(tabs)/profile";
 import { setSelectedChild } from "@/services/children";
 
+
 export default function SignUp() {
     const { commonStyles, isDark, theme } = useTheme();
     const [username, setUsername] = useState("");
@@ -39,6 +40,7 @@ export default function SignUp() {
     const [allergies, setAllergies] = useState<string[]>([]);
     const [vaccines, setVaccines] = useState<string[]>([]);
     const [illnesses, setIllnesses] = useState<string[]>([]);
+
     const Chip = ({ label, selected, onPress, color }: any) => (
         <TouchableOpacity
             onPress={onPress}
@@ -105,6 +107,7 @@ export default function SignUp() {
                 allergies: Array.isArray(allergies) ? allergies.join(", ") : allergies,
                 vaccines: Array.isArray(vaccines) ? vaccines.join(", ") : vaccines,
                 illnesses: Array.isArray(illnesses) ? illnesses.join(", ") : illnesses,
+
             })
             .select()
             .single();
@@ -412,6 +415,7 @@ export default function SignUp() {
                                     />
                                 ))}
                             </View>
+
                         </View>
 
 

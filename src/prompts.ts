@@ -122,6 +122,7 @@ Kurallar:
   ]
 }
 `;
+
 export const GROWTH_VIEW_PROMPT = (child: any, ageMonths: number) => `
 Sen bir pediatri ve çocuk gelişim uzmanısın. ${child.name} adlı çocuk için yaşına uygun gelişim rehberi hazırla.  
 
@@ -149,6 +150,7 @@ Kurallar:
     "description": "Konuşma ve zeka gelişimi hakkında kısa açıklama",
     "activities": [
       "aktivite 1",
+
       "aktivite 2",
       "aktivite 3"
     ]
@@ -162,6 +164,7 @@ Kurallar:
 Notlar:
 - "growth_chart" içindeki p50 değerlerini WHO ortalamasına göre örnekle (cm cinsinden).
 - "child" alanında sadece tek nokta ver.
+
 `;
 
 // Genel sağlık özeti promptu
@@ -183,6 +186,7 @@ Kurallar:
 3. Gereksiz detay, formalite (doktor imzası, saygılarla, vb.) ekleme.
 4. Özet + 1 küçük öneri ver.
 `;
+
 export const DAILY_NUTRITION_PROMPT = (child: any) => `
 Sen bir çocuk beslenme uzmanısın.
 ${child.name} adlı çocuğun bilgileri:
@@ -200,10 +204,11 @@ Kurallar:
 {
   "summary": "Genel kısa özet",
   "meals": {
-     "kahvalti": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3"],
-     "ogle": ["örnek yiyecek 1", "örnek yiyecek 2"],
-     "aksam": ["örnek yiyecek 1", "örnek yiyecek 2"],
-     "ara": ["örnek yiyecek 1", "örnek yiyecek 2"]
+
+     "kahvalti": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"],
+     "ogle": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"],
+     "aksam": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"],
+     "ara": ["örnek yiyecek 1", "örnek yiyecek 2", "örnek yiyecek 3", "örnek yiyecek 4", "örnek yiyecek 5", "örnek yiyecek 6"]
   }
 }
 3. JSON dışında hiçbir şey yazma.

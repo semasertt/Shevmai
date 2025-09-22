@@ -5,24 +5,55 @@ export const getCommonStyles = (isDark: boolean) => {
     const theme = isDark ? darkTheme : lightTheme;
 
     return StyleSheet.create({
+       
         tipCard: {
             backgroundColor: "#fff",
             borderRadius: 12,
-            padding: 14,
-            marginBottom: 12,
+            padding: 12,
+            marginBottom: 10,
             shadowColor: "#000",
-            shadowOpacity: 0.08,
-            shadowRadius: 6,
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
             elevation: 2,
         },
         tipTitle: {
             fontWeight: "600",
             color: "#5c4033",
             fontSize: 16,
+
         },
         tipText: {
             color: "#444",
             fontSize: 14,
+
+            marginTop: 4,
+        },
+
+        dropdown: {
+            height: 50,
+            borderColor: "#e5e7eb",
+            borderWidth: 1,
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            marginTop: 8,
+            marginBottom: 16,
+            backgroundColor: "#fafafa",
+            // gölge efekti
+            shadowColor: "#000",
+            shadowOpacity: 0.05,
+            shadowOffset: { width: 0, height: 2 },
+            shadowRadius: 4,
+            elevation: 2,
+        },
+
+        dropdownText: {
+            fontSize: 16,
+            color: "#111",
+        },
+
+        dropdownPlaceholder: {
+            fontSize: 15,
+            color: "#9ca3af",
         },
 
         statusRow: { flexDirection: "row", alignItems: "center", marginTop: 6 },

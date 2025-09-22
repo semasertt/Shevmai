@@ -18,11 +18,11 @@ import { router } from "expo-router";
 import { useTheme } from "@/src/context/ThemeContext";
 import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
 import { HEALTH_SUMMARY_PROMPT  } from "@/src/prompts";
 import { analyzeText } from "@/src/api/gemini";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KeyboardAvoidingView, Platform } from "react-native";
-
 
 export default function ProfileScreen() {
     const { commonStyles, theme, isDark } = useTheme();
@@ -37,6 +37,7 @@ export default function ProfileScreen() {
     const [previewVisible, setPreviewVisible] = useState(false);
     const [healthSummary, setHealthSummary] = useState<string>("");
     const [loadingSummary, setLoadingSummary] = useState(true);
+
     const Chip = ({ label, selected, onPress, color }: any) => (
         <TouchableOpacity
             onPress={onPress}
@@ -52,6 +53,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
     );
     // ✅ Çocuğu yükle
+
     const loadChild = async () => {
         const { data: userData, error: userErr } = await supabase.auth.getUser();
         console.log("👤 Kullanıcı:", userData, userErr);
@@ -99,24 +101,26 @@ export default function ProfileScreen() {
         }
     };
 
-
+    useFocusEffect(
+        useCallback(() => {
+            loadChild();
+        }, [])
+    );
     useEffect(() => {
-        if (!currentChild) return;
+        (async () => {
+            if (!currentChild) return;
 
-        const fetchSummary = async () => {
             const CACHE_KEY = `health_summary_${currentChild.id}`;
             setLoadingSummary(true);
 
-            try {
-                // Önce cache
-                const cached = await AsyncStorage.getItem(CACHE_KEY);
-                if (cached) {
-                    setHealthSummary(cached);
-                    setLoadingSummary(false);
-                    return; // cache varsa API çağrısı yapma
-                }
+            // Cache varsa göster
+            const cached = await AsyncStorage.getItem(CACHE_KEY);
+            if (cached) {
+                setHealthSummary(cached);
+                setLoadingSummary(false);
+            }
 
-                // AI çağrısı
+            try {
                 const prompt = HEALTH_SUMMARY_PROMPT(currentChild);
                 const aiResult = await analyzeText(prompt);
                 const clean = aiResult.replace(/```/g, "").trim();
@@ -125,21 +129,12 @@ export default function ProfileScreen() {
                 await AsyncStorage.setItem(CACHE_KEY, clean);
             } catch (err) {
                 console.error("❌ Health summary API hatası:", err);
-            } finally {
-                setLoadingSummary(false);
             }
-        };
 
-        fetchSummary();
-    }, [currentChild?.id]); // sadece ID değişince çalışsın
-
-
-    useFocusEffect(
-        useCallback(() => {
-            loadChild();
-        }, [])
-    );
-
+            setLoadingSummary(false);
+        })();
+    }, [currentChild]);
+   
     const formatFieldName = (field: string) => {
         const map: { [key: string]: string } = {
             name: "İsim",
@@ -263,6 +258,7 @@ export default function ProfileScreen() {
         }
     };
 
+
     return (
         <View style={{ flex: 1, backgroundColor: theme.background }}>
             {/* 📌 Header */}
@@ -288,6 +284,7 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                         <Text style={commonStyles.name}>{currentChild.name}</Text>
                     </View>
+
 
                     {/* Başlık + Düzenle butonu */}
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
@@ -361,7 +358,7 @@ export default function ProfileScreen() {
                 </View>
 
                 {/* 📊 Sağlık Özetim */}
-                {/* 📊 Sağlık Özetim */}
+
                 <View style={commonStyles.summaryCard}>
                     <Text style={commonStyles.summaryTitle}>📌 Genel Sağlık Özeti</Text>
                     {loadingSummary ? (
