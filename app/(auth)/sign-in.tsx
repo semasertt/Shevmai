@@ -49,6 +49,26 @@ export default function SignIn() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) return Alert.alert("Giriş Hatası", error.message);
 
+// ✅ Kullanıcı bilgisi çek
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+
+        if (user) {
+            // ✅ Profilden seçili çocuk id’sini al
+            const { data: profile, error: pErr } = await supabase
+                .from("profiles")
+                .select("selected_child_id")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (!pErr && profile?.selected_child_id) {
+                // ✅ Local cache’e kaydet
+                await setSelectedChild(profile.selected_child_id);
+            }
+        }
+
+
+
         router.replace("/home");
     };
 
